@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Center - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="error-handler.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .audit-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .audit-header {
+            background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .audit-header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .audit-header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .audit-header p {
+            opacity: 0.8;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #1a1c2c;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Common Components */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #1a1c2c;
+            transition: transform 0.3s;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1c2c;
+        }
+
+        .controls-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            background: #1a1c2c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn-action:hover {
+            background: #33364f;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #fcfcfc;
+            padding: 15px;
+            text-align: left;
+            font-size: 12px;
+            color: #777;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f9f9f9;
+            font-size: 13px;
+            color: #444;
+        }
+
+        tr:hover {
+            background: #fcfcfc;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge.success {
+            background: #e6ffed;
+            color: #1e7e34;
+        }
+
+        .badge.failed {
+            background: #ffeef0;
+            color: #d73a49;
+        }
+
+        .badge.info {
+            background: #eaf5ff;
+            color: #0366d6;
+        }
+
+        .badge.warning {
+            background: #fffbdd;
+            color: #b08800;
+        }
+
+        /* Detailed User Audit Specifics */
+        .user-search-header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .user-profile-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .profile-field label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .profile-field span {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1c2c;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            border-left: 4px solid #1a1c2c;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .timeline-time {
+            width: 150px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-header {
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #1a1c2c;
+            font-size: 20px;
+        }
+
+        main.main-content {
+            overflow-y: scroll;
+            padding: 40px 20px 100px 20px;
+            height: 100%;
+            background: #f4f6f9;
+            scrollbar-gutter: stable;
+        }
+
+        .group-header {
+            background-color: #f1f3f5 !important;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .group-header:hover {
+            background-color: #e9ecef !important;
+        }
+
+        .group-header i {
+            transition: transform 0.2s;
+            margin-right: 10px;
+            color: #4a192c;
+        }
+
+        .group-header.expanded i {
+            transform: rotate(90deg);
+        }
+
+        .sub-activity {
+            display: none;
+            background-color: #ffffff;
+        }
+
+        .sub-activity td {
+            padding-left: 40px;
+            border-left: 2px solid #4a192c;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .group-count {
+            background: #4a192c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="header-container"></div>
+
+    <div class="container" style="display: flex; height: 100vh;">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content" style="flex: 1;">
+            <div class="audit-container">
+                <!-- Global Header -->
+                <div class="audit-header">
+                    <h1><i class="fas fa-shield-halved"></i> Audit Center</h1>
+                    <p>Comprehensive security monitoring and system change tracking</p>
+                </div>
+
+                <!-- Page Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('system')"><i class="fas fa-database"></i> System
+                        Changes</button>
+                    <button class="tab-btn" onclick="switchTab('login-overview')"><i class="fas fa-chart-line"></i>
+                        Login Activity</button>
+                </div>
+
+                <!-- MESSAGES CONTAINER -->
+                <div id="msgContainer"></div>
+
+                <!-- SECTION: SYSTEM CHANGES -->
+                <div id="system" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Changes</h3>
+                            <div class="value" id="sys-total">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #28a745;">
+                            <h3>Inserts</h3>
+                            <div class="value" id="sys-insert">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #ffc107;">
+                            <h3>Updates</h3>
+                            <div class="value" id="sys-update">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #dc3545;">
+                            <h3>Deletes</h3>
+                            <div class="value" id="sys-delete">-</div>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="control-group">
+                            <label>Table:</label>
+                            <select id="sys-table-filter">
+                                <option value="">All Tables</option>
+                                <option value="user">User</option>
+                                <option value="product_1">Product</option>
+                                <option value="batch_upload">Batch Upload</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Limit:</label>
+                            <input type="number" id="sys-limit" value="50" min="1" style="width: 70px;">
+                        </div>
+                        <button class="btn-action" onclick="loadSystemLogs()"><i class="fas fa-sync"></i>
+                            Refresh</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="sys-log-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Op</th>
+                                    <th>Record ID</th>
+                                    <th>Changes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sys-log-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION: LOGIN OVERVIEW -->
+                <div id="login-overview" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Attempts</h3>
+                            <div class="value" id="log-total">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #28a745;">
+                            <h3>Successful</h3>
+                            <div class="value" id="log-success">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #dc3545;">
+                            <h3>Failed</h3>
+                            <div class="value" id="log-failed">-</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #17a2b8;">
+                            <h3>Success Rate</h3>
+                            <div class="value" id="log-rate">-%</div>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="control-group">
+                            <label>Range (Days):</label>
+                            <input type="number" id="log-days" value="7" min="1" style="width: 60px;">
+                        </div>
+                        <button class="btn-action" onclick="loadLoginOverview()"><i class="fas fa-sync"></i> Refresh
+                            Data</button>
+                    </div>
+
+                    <div class="table-container">
+                        <div style="padding: 15px; border-bottom: 1px solid #eee; font-weight: 600;">Recent Login
+                            Activity</div>
+                        <table id="recent-login-table">
+                            <thead>
+                                <tr>
+                                    <th>Login Time</th>
+                                    <th>Logout Time</th>
+                                    <th>Username</th>
+                                    <th>Status</th>
+                                    <th>IP Address</th>
+                                    <th>Duration</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-login-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </main>
+    </div>
+
+    <!-- COMMON DETAIL MODAL -->
+    <div class="modal" id="auditModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <h2 id="modalTitle">Details</h2>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            // Initial load for specific tabs
+            if (tabId === 'system') loadSystemLogs();
+            if (tabId === 'login-overview') loadLoginOverview();
+        }
+
+        // --- SYSTEM LOGS LOGIC ---
+        async function loadSystemLogs() {
+            try {
+                const table = document.getElementById('sys-table-filter').value;
+                const limit = document.getElementById('sys-limit').value;
+                let url = `${API_URL}/audit-logs?limit=${limit}`;
+                if (table) url += `&table=${table}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const tbody = document.getElementById('sys-log-body');
+
+                tbody.innerHTML = data.map(log => `
+                    <tr>
+                        <td><small>${new Date(log.timestamp).toLocaleString()}</small></td>
+                        <td><strong>${log.last_name || log.username || 'System'}</strong></td>
+                        <td><span class="badge ${getOpClass(log.operation)}">${log.operation}</span></td>
+                        <td><code>${log.record_id}</code></td>
+                        <td style="padding: 12px 15px;">${formatChangedCols(log.changed_columns)}</td>
+                        <td><button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick='showSysDetails(${JSON.stringify(log)})'>Details</button></td>
+                    </tr>
+                `).join('');
+
+                // Update stats
+                document.getElementById('sys-total').innerText = data.length;
+                document.getElementById('sys-insert').innerText = data.filter(l => l.operation === 'INSERT').length;
+                document.getElementById('sys-update').innerText = data.filter(l => l.operation === 'UPDATE').length;
+                document.getElementById('sys-delete').innerText = data.filter(l => l.operation === 'DELETE').length;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function toggleGroup(groupId, element) {
+            const subRows = document.querySelectorAll(`.sub-activity.${groupId}`);
+            const isExpanded = element.classList.contains('expanded');
+
+            if (isExpanded) {
+                subRows.forEach(r => r.style.display = 'none');
+                element.classList.remove('expanded');
+            } else {
+                subRows.forEach(r => r.style.display = 'table-row');
+                element.classList.add('expanded');
+            }
+        }
+
+        function getOpClass(op) {
+            if (op === 'INSERT') return 'success';
+            if (op === 'UPDATE') return 'warning';
+            if (op === 'DELETE') return 'failed';
+            return 'info';
+        }
+
+        function formatChangedCols(cols) {
+            if (!cols) return '<span style="color: #999;">-</span>';
+            let colArray = [];
+            if (typeof cols === 'string') {
+                try { colArray = JSON.parse(cols); } catch (e) { return cols; }
+            } else {
+                colArray = Array.isArray(cols) ? cols : [];
+            }
+            
+            if (colArray.length === 0) return '<span style="color: #999;">-</span>';
+            
+            return colArray.map(col => `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-right: 5px; font-weight: 500;">${col}</span>`).join('');
+        }
+
+        // --- LOGIN OVERVIEW LOGIC ---
+        async function loadLoginOverview() {
+            try {
+                const days = document.getElementById('log-days').value;
+                const statsRes = await fetch(`${API_URL}/login-audit/stats?days=${days}`);
+                const statsData = await statsRes.json();
+                const s = statsData.data;
+
+                document.getElementById('log-total').innerText = s.total_login_attempts;
+                document.getElementById('log-success').innerText = s.successful_logins;
+                document.getElementById('log-failed').innerText = s.failed_login_attempts;
+                document.getElementById('log-rate').innerText = s.success_rate.toFixed(1) + '%';
+
+                const recentRes = await fetch(`${API_URL}/login-audit/recent?limit=20`);
+                const recentData = await recentRes.json();
+                const tbody = document.getElementById('recent-login-body');
+                tbody.innerHTML = recentData.data.map(log => `
+                <tr>
+                    <td><small>${new Date(log.login_timestamp).toLocaleString()}</small></td>
+                    <td><small>${log.logout_timestamp ? new Date(log.logout_timestamp).toLocaleString() : '-'}</small></td>
+                    <td><strong>${log.username}</strong></td>
+                    <td><span class="badge ${log.login_status === 'SUCCESS' ? 'success' : 'failed'}">${log.login_status}</span></td>
+                    <td><code>${log.ip_address || 'N/A'}</code></td>
+                    <td>${log.duration_seconds ? Math.round(log.duration_seconds / 60) + 'm' : '-'}</td>
+                    <td><button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick='showLoginDetails(${JSON.stringify(log)})'>View</button></td>
+                </tr>
+            `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        // --- MODAL HELPERS ---
+        function showSysDetails(log) {
+            document.getElementById('modalTitle').innerText = `System Change: ${log.table} (${log.operation})`;
+            
+            // Format old and new values as plain text
+            const formatValues = (obj) => {
+                if (!obj) return 'No data';
+                const parsed = tryParse(obj);
+                if (typeof parsed !== 'object' || parsed === null) return parsed;
+                return Object.entries(parsed)
+                    .map(([key, value]) => `<div style="margin-bottom: 8px;"><strong>${key}:</strong> ${value !== null ? value : 'NULL'}</div>`)
+                    .join('');
+            };
+            
+            let body = `
+            <div style="font-size: 14px; line-height: 1.6;">
+                <p><strong>Record ID:</strong> <code>${log.record_id}</code></p>
+                <p><strong>Performed By:</strong> ${log.username || 'System'} (ID: ${log.user_id || '-'})</p>
+                <p><strong>Timestamp:</strong> ${new Date(log.timestamp).toLocaleString()}</p>`;
+            
+            // Show deleted user info if applicable
+            if (log.deleted_user_info) {
+                body += `
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                <h4 style="color: #dc3545;">Deleted User Information</h4>
+                <div style="background: #ffeef0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p><strong>User ID:</strong> ${log.deleted_user_info.deleted_user_id}</p>
+                    <p><strong>Username:</strong> ${log.deleted_user_info.deleted_username}</p>
+                    <p><strong>Email:</strong> ${log.deleted_user_info.deleted_email}</p>
+                </div>`;
+            }
+            
+            body += `
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                <h4>Change Breakdown</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+                    <div style="background: #fff5f5; padding: 15px; border-radius: 8px;">
+                        <h5 style="color: #c53030;">Old Values</h5>
+                        <div style="font-size: 13px;">${formatValues(log.old_values)}</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 15px; border-radius: 8px;">
+                        <h5 style="color: #2f855a;">New Values</h5>
+                        <div style="font-size: 13px;">${formatValues(log.new_values)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('auditModal').classList.add('active');
+        }
+
+        function showLoginDetails(log) {
+            document.getElementById('modalTitle').innerText = `Login Audit: ${log.username}`;
+            let body = `
+            <div style="font-size: 14px; line-height: 1.6;">
+                <p><strong>Status:</strong> <span class="badge ${log.login_status === 'SUCCESS' ? 'success' : 'failed'}">${log.login_status}</span></p>
+                ${log.failure_reason ? `<p><strong>Failure Reason:</strong> <span style="color: #d73a49;">${log.failure_reason}</span></p>` : ''}
+                <p><strong>Login Time:</strong> ${new Date(log.login_timestamp).toLocaleString()}</p>
+                <p><strong>Logout Time:</strong> ${log.logout_timestamp ? new Date(log.logout_timestamp).toLocaleString() : 'Still active'}</p>
+                <p><strong>IP Address:</strong> <code>${log.ip_address}</code></p>
+                <p><strong>Session Duration:</strong> ${log.duration_seconds ? Math.round(log.duration_seconds / 60) + ' minutes' : 'Active or N/A'}</p>
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                <h4>Client Footprint</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                    <p><strong>Device/Agent:</strong></p>
+                    <p style="font-family: monospace; font-size: 12px; margin-top: 5px;">${log.user_agent || 'Unknown'}</p>
+                </div>
+            </div>
+        `;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('auditModal').classList.add('active');
+        }
+
+        function tryParse(val) {
+            if (!val) return {};
+            if (typeof val === 'string') {
+                try { return JSON.parse(val); } catch (e) { return val; }
+            }
+            return val;
+        }
+
+        function closeModal() { document.getElementById('auditModal').classList.remove('active'); }
+
+        // Initial Load
+        window.onload = () => {
+            loadSystemLogs();
+        }
+    </script>
+
+    <script src="header.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="layout-wrapper.js"></script>
+</body>
+
+</html>

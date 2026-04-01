@@ -52,6 +52,18 @@ class UserLogin(BaseModel):
     class Config:
         from_attributes = True
 
+
+class UserUpdate(BaseModel):
+    """Schema for user info update"""
+    username: Optional[str] = None
+    password: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 class UserInfoCreate(BaseModel):
     """Schema for creating/updating user profile info"""
     first_name: Optional[str] = None

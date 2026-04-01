@@ -5,7 +5,7 @@ function loadHeader() {
         console.error('Header container not found');
         return;
     }
-    
+
     // Inline header HTML to avoid fetch issues
     const headerHTML = `<header class="fixed-header">
     <div class="header-left">
@@ -43,7 +43,7 @@ function loadHeader() {
         </button>
     </div>
 </header>`;
-    
+
     headerContainer.innerHTML = headerHTML;
     setupProfileDisplay(
         localStorage.getItem('username') || 'User',
@@ -55,23 +55,43 @@ function loadHeader() {
 // Logout function
 function handleLogout() {
     try {
-        // Step 1: Get username before clearing
+        // Step 1: Get user info before clearing
         const username = localStorage.getItem('username') || 'User';
-        console.log('[LOGOUT] Step 1: Retrieved username:', username);
-        
-        // Step 2: Clear localStorage
+        const sessionId = localStorage.getItem('sessionId');
+        console.log('[LOGOUT] Step 1: Retrieved username:', username, 'SessionId:', sessionId);
+
+        // Step 2: Call backend logout endpoint to record logout
+        if (sessionId) {
+            console.log('[LOGOUT] Step 2: Recording logout on backend');
+            fetch('http://127.0.0.1:8000/login-audit/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_id: sessionId })
+            })
+            .then(response => {
+                console.log('[LOGOUT] Step 3: Logout recorded on backend');
+            })
+            .catch(error => {
+                console.log('[LOGOUT] Step 3: Error recording logout:', error.message);
+            });
+        }
+
+        // Step 4: Clear localStorage
         localStorage.removeItem('userId');
         localStorage.removeItem('username');
         localStorage.removeItem('userRole');
-        console.log('[LOGOUT] Step 2: Cleared localStorage');
-        
-        // Step 3: Show success popup
+        localStorage.removeItem('sessionId');
+        console.log('[LOGOUT] Step 4: Cleared localStorage');
+
+        // Step 5: Show success popup
         showError('INVALID_CREDENTIALS', `Goodbye ${username}! You have been logged out successfully.`, true);
-        console.log('[LOGOUT] Step 3: Success popup displayed');
-        
-        // Step 4: Redirect to login page
+        console.log('[LOGOUT] Step 5: Success popup displayed');
+
+        // Step 6: Redirect to login page
         setTimeout(() => {
-            console.log('[LOGOUT] Step 4: Redirecting to login page');
+            console.log('[LOGOUT] Step 6: Redirecting to login page');
             window.location.href = 'login.html';
         }, 2000);
     } catch (error) {
@@ -82,40 +102,43 @@ function handleLogout() {
 }
 
 // Profile Display Setup
-function setupProfileDisplay(username, userRole) {
+function setupProfileDisplay(username, userRole, lastName = null) {
     // Get initials from username
     const initials = username.substring(0, 1).toUpperCase();
     
+    // Display name (last name with fallback to username)
+    const displayName = lastName || username;
+
     // Update header profile button initials
     const avatarInitials = document.getElementById('avatar-initials');
     const usernameDisplay = document.getElementById('username-display');
-    
+
     if (avatarInitials) {
         avatarInitials.textContent = initials;
     }
-    
+
     if (usernameDisplay) {
-        usernameDisplay.textContent = username;
+        usernameDisplay.textContent = displayName;
     }
-    
+
     // Update profile menu initials
     const menuAvatarInitials = document.getElementById('menu-avatar-initials');
     const menuUsername = document.getElementById('menu-username');
     const menuRole = document.getElementById('menu-role');
-    
+
     if (menuAvatarInitials) {
         menuAvatarInitials.textContent = initials;
     }
-    
+
     if (menuUsername) {
-        menuUsername.textContent = username;
+        menuUsername.textContent = displayName;
     }
-    
+
     if (menuRole) {
         menuRole.textContent = userRole || 'user';
     }
-    
-    // Load profile picture from server
+
+    // Load profile picture and last name from server
     const userId = localStorage.getItem('userId');
     if (userId) {
         console.log('[HEADER] Loading profile picture for user_id: ' + userId);
@@ -123,14 +146,22 @@ function setupProfileDisplay(username, userRole) {
             .then(response => response.json())
             .then(data => {
                 console.log('[HEADER] Profile data loaded');
+                // Update display name if last_name is available
+                if (data.last_name) {
+                    const displayName = data.last_name;
+                    const usernameDisplay = document.getElementById('username-display');
+                    const menuUsername = document.getElementById('menu-username');
+                    if (usernameDisplay) usernameDisplay.textContent = displayName;
+                    if (menuUsername) menuUsername.textContent = displayName;
+                }
                 if (data.avatar_url) {
                     let avatarUrl = data.avatar_url;
                     if (!avatarUrl.startsWith('http')) {
                         avatarUrl = 'http://127.0.0.1:8000' + avatarUrl;
                     }
-                    
+
                     console.log('[HEADER] Setting avatar image to: ' + avatarUrl);
-                    
+
                     // Set header avatar image
                     const headerAvatarImg = document.getElementById('header-avatar-img');
                     if (headerAvatarImg) {
@@ -141,7 +172,7 @@ function setupProfileDisplay(username, userRole) {
                             headerInitials.style.display = 'none';
                         }
                     }
-                    
+
                     // Set menu avatar image
                     const menuAvatarImg = document.getElementById('menu-avatar-img');
                     if (menuAvatarImg) {
@@ -158,21 +189,21 @@ function setupProfileDisplay(username, userRole) {
                 console.log('[HEADER] Error loading profile picture: ' + error.message);
             });
     }
-    
+
     // Add click handler for View Profile button
     const viewProfileBtn = document.getElementById('view-profile');
     if (viewProfileBtn) {
-        viewProfileBtn.addEventListener('click', function() {
+        viewProfileBtn.addEventListener('click', function () {
             console.log('[PROFILE] View Profile button clicked');
             window.location.href = 'admin_profile.html';
         });
     }
-    
+
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         const profileBtn = document.getElementById('profile-btn');
         const profileMenu = document.getElementById('profile-menu');
-        
+
         if (profileBtn && profileMenu && !profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
             profileMenu.classList.remove('active');
             profileBtn.classList.remove('active');
@@ -184,7 +215,7 @@ function setupProfileDisplay(username, userRole) {
 function toggleProfileMenu() {
     const profileBtn = document.getElementById('profile-btn');
     const profileMenu = document.getElementById('profile-menu');
-    
+
     if (profileBtn && profileMenu) {
         profileBtn.classList.toggle('active');
         profileMenu.classList.toggle('active');

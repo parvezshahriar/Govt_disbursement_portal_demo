@@ -4,17 +4,25 @@ from database import Base
 from datetime import datetime
 
 
+class ClientInfo(Base):
+    __tablename__ = 'client_info'
+    BENEFICIARY_ID = Column(String, primary_key=True, index=True, unique=True)
+    name = Column(String)  # From CRACCOUNTTITLE
+    gender = Column(String, nullable=True)
+    CRACCOUNTNO = Column(String, unique=True)
+    CRACCOUNTTYPE = Column(String)
+    CRROUTINGNO = Column(String)
+    MOBILE = Column(String, unique=True)
+    NID_NO = Column(String, unique=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
 class Product(Base):
     __tablename__ = 'product_1'
     EFTREFNUMBER = Column(String, primary_key=True, index=True, unique=True)
-    CRACCOUNTTITLE = Column(String)
-    CRACCOUNTTYPE = Column(String)
-    CRACCOUNTNO = Column(String, unique=True)
-    CRROUTINGNO = Column(String)
     CRAMOUNT = Column(Float)
-    BENEFICIARY_ID = Column(String, unique=True)
-    MOBILE = Column(String, unique=True)
-    NID_NO = Column(String, unique=True)
+    BENEFICIARY_ID = Column(String, ForeignKey('client_info.BENEFICIARY_ID'), index=True)
     MIN_CODE = Column(String)
     DEPT_CODE = Column(String)
     PAYMENT_CYCLE_NAME_EN = Column(String)

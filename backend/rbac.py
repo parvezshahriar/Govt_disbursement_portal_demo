@@ -1,6 +1,7 @@
 # Role-Based Access Control (RBAC) for Government Disbursement Portal
 # This file defines roles, permissions, and utility functions for access control
 
+from __future__ import annotations
 from enum import Enum
 from typing import List, Set
 

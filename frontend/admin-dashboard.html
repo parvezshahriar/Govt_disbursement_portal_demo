@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +33,7 @@
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .form-group {
@@ -279,392 +280,395 @@
         }
     </style>
 </head>
+
 <body>
 
-<div id="header-container"></div>
+    <div id="header-container"></div>
 
-<div class="container">
-    <div id="sidebar-container"></div>
-    
-    <main class="main-content">
-        <!-- Statistics Section -->
-        <div class="stats-section">
-            <div class="stat-card">
-                <div class="stat-number" id="total-users">0</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="total-admins">0</div>
-                <div class="stat-label">Administrators</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="total-managers">0</div>
-                <div class="stat-label">Managers</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="total-active">0</div>
-                <div class="stat-label">Active Users</div>
-            </div>
-        </div>
+    <div class="container">
+        <div id="sidebar-container"></div>
 
-        <!-- Create User Section -->
-        <div class="admin-section">
-            <h3 class="section-title">Create New User</h3>
-            <div class="admin-grid">
+        <main class="main-content">
+            <!-- Statistics Section -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-users">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-admins">0</div>
+                    <div class="stat-label">Administrators</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-managers">0</div>
+                    <div class="stat-label">Managers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-active">0</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+
+            <!-- Create User Section -->
+            <div class="admin-section">
+                <h3 class="section-title">Create New User</h3>
+                <div class="admin-grid">
+                    <div class="card">
+                        <div class="success-message" id="create-success">✓ User created successfully!</div>
+                        <div class="error-message" id="create-error"></div>
+                        <form onsubmit="handleCreateUser(event)">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="create-username" required placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="create-password" required placeholder="Enter password">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="create-email" placeholder="Enter email (optional)">
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="create-role" required>
+                                    <option value="">Select a role</option>
+                                    <option value="admin">Administrator</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="user">User</option>
+                                </select>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit" class="btn-submit">Create User</button>
+                                <button type="reset" class="btn-reset">Clear</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">System Overview</h4>
+                        <div style="line-height: 2;">
+                            <p><strong>Latest User Created:</strong> <span id="latest-user">None</span></p>
+                            <p><strong>Total Transactions:</strong> <span id="total-transactions">0</span></p>
+                            <p><strong>System Status:</strong> <span style="color: #4caf50; font-weight: 600;">●
+                                    Active</span></p>
+                            <p><strong>Last Updated:</strong> <span id="last-updated">Now</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Section -->
+            <div class="admin-section">
+                <h3 class="section-title">User Management</h3>
                 <div class="card">
-                    <div class="success-message" id="create-success">✓ User created successfully!</div>
-                    <div class="error-message" id="create-error"></div>
-                    <form onsubmit="handleCreateUser(event)">
+                    <div class="table-wrapper">
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Manage</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-list-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-light);">Loading
+                                        users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Report Section -->
+            <div class="admin-section">
+                <h3 class="section-title">Generate Report</h3>
+                <div class="admin-grid">
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Report Options</h4>
                         <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="create-username" required placeholder="Enter username">
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="create-password" required placeholder="Enter password">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="create-email" placeholder="Enter email (optional)">
-                        </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <select id="create-role" required>
-                                <option value="">Select a role</option>
-                                <option value="admin">Administrator</option>
-                                <option value="manager">Manager</option>
-                                <option value="user">User</option>
+                            <label>Report Type</label>
+                            <select id="report-type" required>
+                                <option value="">Select report type</option>
+                                <option value="users">User Report</option>
+                                <option value="transactions">Transaction Report</option>
+                                <option value="activity">Activity Log</option>
                             </select>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn-submit">Create User</button>
-                            <button type="reset" class="btn-reset">Clear</button>
+                        <div class="form-group">
+                            <label>Date Range</label>
+                            <input type="date" id="report-start-date">
                         </div>
-                    </form>
-                </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" id="report-end-date">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-submit" onclick="generateReport()">Generate Report</button>
+                            <button class="btn-reset" onclick="downloadReport()">Download PDF</button>
+                        </div>
+                    </div>
 
-                <!-- Quick Stats -->
-                <div class="card">
-                    <h4 style="margin-bottom: 15px; color: var(--text-dark);">System Overview</h4>
-                    <div style="line-height: 2;">
-                        <p><strong>Latest User Created:</strong> <span id="latest-user">None</span></p>
-                        <p><strong>Total Transactions:</strong> <span id="total-transactions">0</span></p>
-                        <p><strong>System Status:</strong> <span style="color: #4caf50; font-weight: 600;">● Active</span></p>
-                        <p><strong>Last Updated:</strong> <span id="last-updated">Now</span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Management Section -->
-        <div class="admin-section">
-            <h3 class="section-title">User Management</h3>
-            <div class="card">
-                <div class="table-wrapper">
-                    <table class="user-table">
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Manage</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-list-body">
-                            <tr>
-                                <td colspan="6" style="text-align: center; color: var(--text-light);">Loading users...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Generate Report Section -->
-        <div class="admin-section">
-            <h3 class="section-title">Generate Report</h3>
-            <div class="admin-grid">
-                <div class="card">
-                    <h4 style="margin-bottom: 15px; color: var(--text-dark);">Report Options</h4>
-                    <div class="form-group">
-                        <label>Report Type</label>
-                        <select id="report-type" required>
-                            <option value="">Select report type</option>
-                            <option value="users">User Report</option>
-                            <option value="transactions">Transaction Report</option>
-                            <option value="activity">Activity Log</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Date Range</label>
-                        <input type="date" id="report-start-date">
-                    </div>
-                    <div class="form-group">
-                        <label>End Date</label>
-                        <input type="date" id="report-end-date">
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn-submit" onclick="generateReport()">Generate Report</button>
-                        <button class="btn-reset" onclick="downloadReport()">Download PDF</button>
-                    </div>
-                </div>
-
-                <!-- Report Preview -->
-                <div class="card">
-                    <h4 style="margin-bottom: 15px; color: var(--text-dark);">Recent Reports</h4>
-                    <div id="report-list" style="max-height: 200px; overflow-y: auto;">
-                        <p style="color: var(--text-light); font-size: 13px;">No reports generated yet</p>
+                    <!-- Report Preview -->
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Recent Reports</h4>
+                        <div id="report-list" style="max-height: 200px; overflow-y: auto;">
+                            <p style="color: var(--text-light); font-size: 13px;">No reports generated yet</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
-</div>
-
-<!-- Edit User Modal -->
-<div class="modal" id="editUserModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Edit User</h2>
-            <button class="modal-close" onclick="closeEditUserModal()">×</button>
-        </div>
-        <form onsubmit="handleUpdateUser(event)">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="edit-username" readonly>
-            </div>
-            <div class="form-group">
-                <label>Password (Leave blank to keep current)</label>
-                <input type="password" id="edit-password" placeholder="Enter new password">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="edit-email">
-            </div>
-            <div class="form-group">
-                <label>Role</label>
-                <select id="edit-role" required>
-                    <option value="admin">Administrator</option>
-                    <option value="manager">Manager</option>
-                    <option value="user">User</option>
-                </select>
-            </div>
-            <div class="btn-group">
-                <button type="submit" class="btn-submit">Update User</button>
-                <button type="button" class="btn-reset" onclick="closeEditUserModal()">Cancel</button>
-            </div>
-        </form>
+        </main>
     </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
-<script src="layout-wrapper.js"></script>
-<script src="error-handler.js"></script>
-<script src="header.js"></script>
-<script src="sidebar.js"></script>
+    <!-- Edit User Modal -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="modal-close" onclick="closeEditUserModal()">×</button>
+            </div>
+            <form onsubmit="handleUpdateUser(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="edit-username" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Password (Leave blank to keep current)</label>
+                    <input type="password" id="edit-password" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="edit-email">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="edit-role" required>
+                        <option value="admin">Administrator</option>
+                        <option value="manager">Manager</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn-submit">Update User</button>
+                    <button type="button" class="btn-reset" onclick="closeEditUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<script>
-    let currentEditUserId = null;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <script src="layout-wrapper.js"></script>
+    <script src="error-handler.js"></script>
+    <script src="header.js"></script>
+    <script src="sidebar.js"></script>
 
-    // Initialize admin dashboard
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('[ADMIN] Admin Dashboard Initialized');
-        
-        // Check if user is logged in
-        const username = localStorage.getItem('username');
-        const userId = localStorage.getItem('userId');
-        const userRole = localStorage.getItem('userRole');
-        
-        console.log('[ADMIN] Auth check - username:', username, 'userId:', userId, 'userRole:', userRole);
-        
-        if (!username || !userId) {
-            console.warn('[ADMIN] User not fully authenticated, but allowing page to load');
-            // Redirect to login if not authenticated
-            // window.location.href = 'login.html';
-            // return;
-        }
-        
-        if (username) {
-            console.log('[ADMIN] User authenticated:', username);
-        }
-        
-        // Load statistics and user list
-        console.log('[ADMIN] Loading admin dashboard data...');
-        try {
-            loadUserStats();
-            console.log('[ADMIN] User stats loaded');
-        } catch (e) {
-            console.error('[ADMIN] Error loading user stats:', e);
-        }
-        
-        try {
-            loadUserList();
-            console.log('[ADMIN] User list loaded');
-        } catch (e) {
-            console.error('[ADMIN] Error loading user list:', e);
-        }
-    });
+    <script>
+        let currentEditUserId = null;
 
-    // Load user statistics
-    async function loadUserStats() {
-        try {
-            // Step 1: Get DOM elements
-            const totalUsersEl = document.getElementById('total-users');
-            const totalAdminsEl = document.getElementById('total-admins');
-            const totalManagersEl = document.getElementById('total-managers');
-            const totalActiveEl = document.getElementById('total-active');
-            const latestUserEl = document.getElementById('latest-user');
-            const totalTransactionsEl = document.getElementById('total-transactions');
-            
-            console.log('[LOAD-STATS] Step 1: Got DOM elements');
-            
-            // Step 2: Validate elements exist
-            if (!totalUsersEl || !totalAdminsEl || !totalManagersEl || !totalActiveEl || !latestUserEl) {
-                showError('UNKNOWN_ERROR', 'Statistics display elements not found on page');
-                return;
+        // Initialize admin dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('[ADMIN] Admin Dashboard Initialized');
+
+            // Check if user is logged in
+            const username = localStorage.getItem('username');
+            const userId = localStorage.getItem('userId');
+            const userRole = localStorage.getItem('userRole');
+
+            console.log('[ADMIN] Auth check - username:', username, 'userId:', userId, 'userRole:', userRole);
+
+            if (!username || !userId) {
+                console.warn('[ADMIN] User not fully authenticated, but allowing page to load');
+                // Redirect to login if not authenticated
+                // window.location.href = 'login.html';
+                // return;
             }
-            
-            console.log('[LOAD-STATS] Step 2: All required elements validated');
-            
-            // Step 3: Fetch users from backend
-            const response = await fetch('http://127.0.0.1:8000/users');
-            
-            console.log('[LOAD-STATS] Step 3: Request sent, status:', response.status);
-            
-            // Step 4: Validate response
-            if (!response.ok) {
-                if (response.status === 401) {
-                    showError('VALIDATION_FAILED', 'Unauthorized: Please log in again');
-                } else if (response.status === 403) {
-                    showError('VALIDATION_FAILED', 'You do not have permission to view statistics');
-                } else if (response.status >= 500) {
-                    showError('SERVER_NOT_CONNECTED', 'Server error occurred');
-                } else {
-                    showError('UNKNOWN_ERROR', 'Failed to fetch user data');
+
+            if (username) {
+                console.log('[ADMIN] User authenticated:', username);
+            }
+
+            // Load statistics and user list
+            console.log('[ADMIN] Loading admin dashboard data...');
+            try {
+                loadUserStats();
+                console.log('[ADMIN] User stats loaded');
+            } catch (e) {
+                console.error('[ADMIN] Error loading user stats:', e);
+            }
+
+            try {
+                loadUserList();
+                console.log('[ADMIN] User list loaded');
+            } catch (e) {
+                console.error('[ADMIN] Error loading user list:', e);
+            }
+        });
+
+        // Load user statistics
+        async function loadUserStats() {
+            try {
+                // Step 1: Get DOM elements
+                const totalUsersEl = document.getElementById('total-users');
+                const totalAdminsEl = document.getElementById('total-admins');
+                const totalManagersEl = document.getElementById('total-managers');
+                const totalActiveEl = document.getElementById('total-active');
+                const latestUserEl = document.getElementById('latest-user');
+                const totalTransactionsEl = document.getElementById('total-transactions');
+
+                console.log('[LOAD-STATS] Step 1: Got DOM elements');
+
+                // Step 2: Validate elements exist
+                if (!totalUsersEl || !totalAdminsEl || !totalManagersEl || !totalActiveEl || !latestUserEl) {
+                    showError('UNKNOWN_ERROR', 'Statistics display elements not found on page');
+                    return;
                 }
-                return;
-            }
-            
-            console.log('[LOAD-STATS] Step 4: Response validated');
-            
-            // Step 5: Parse response
-            const users = await response.json();
-            
-            if (!Array.isArray(users)) {
-                showError('UNKNOWN_ERROR', 'Invalid response format: expected user array');
-                return;
-            }
-            
-            console.log('[LOAD-STATS] Step 5: Response parsed,', users.length, 'users found');
-            
-            // Step 6: Validate user data
-            const invalidUsers = users.filter(u => !u.id || !u.username || !u.role || !u.status);
-            if (invalidUsers.length > 0) {
-                showError('UNKNOWN_ERROR', `${invalidUsers.length} users have invalid data`);
-                return;
-            }
-            
-            console.log('[LOAD-STATS] Step 6: User data validated');
-            
-            // Step 7: Calculate statistics
-            const totalUsers = users.length;
-            const totalAdmins = users.filter(u => u.role === 'admin').length;
-            const totalManagers = users.filter(u => u.role === 'manager').length;
-            const totalActive = users.filter(u => u.status === 'Active').length;
-            const latestUser = users.length > 0 ? users[users.length - 1].username : 'N/A';
-            
-            console.log('[LOAD-STATS] Step 7: Statistics calculated');
-            
-            // Step 8: Update DOM elements
-            totalUsersEl.textContent = totalUsers;
-            totalAdminsEl.textContent = totalAdmins;
-            totalManagersEl.textContent = totalManagers;
-            totalActiveEl.textContent = totalActive;
-            latestUserEl.textContent = latestUser;
-            if (totalTransactionsEl) {
-                totalTransactionsEl.textContent = '0';
-            }
-            
-            console.log('[LOAD-STATS] Step 8: UI updated');
-            console.log('[LOAD-STATS] Statistics - Total:', totalUsers, 'Admins:', totalAdmins, 'Managers:', totalManagers, 'Active:', totalActive);
-            
-        } catch (error) {
-            console.error('[LOAD-STATS] Error:', error);
-            
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
-            } else if (error instanceof SyntaxError) {
-                showError('UNKNOWN_ERROR', 'Invalid response format from server');
-            } else {
-                showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while loading statistics');
+
+                console.log('[LOAD-STATS] Step 2: All required elements validated');
+
+                // Step 3: Fetch users from backend
+                const response = await fetch('http://127.0.0.1:8000/users');
+
+                console.log('[LOAD-STATS] Step 3: Request sent, status:', response.status);
+
+                // Step 4: Validate response
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError('VALIDATION_FAILED', 'Unauthorized: Please log in again');
+                    } else if (response.status === 403) {
+                        showError('VALIDATION_FAILED', 'You do not have permission to view statistics');
+                    } else if (response.status >= 500) {
+                        showError('SERVER_NOT_CONNECTED', 'Server error occurred');
+                    } else {
+                        showError('UNKNOWN_ERROR', 'Failed to fetch user data');
+                    }
+                    return;
+                }
+
+                console.log('[LOAD-STATS] Step 4: Response validated');
+
+                // Step 5: Parse response
+                const users = await response.json();
+
+                if (!Array.isArray(users)) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format: expected user array');
+                    return;
+                }
+
+                console.log('[LOAD-STATS] Step 5: Response parsed,', users.length, 'users found');
+
+                // Step 6: Validate user data
+                const invalidUsers = users.filter(u => !u.id || !u.username || !u.role || !u.status);
+                if (invalidUsers.length > 0) {
+                    showError('UNKNOWN_ERROR', `${invalidUsers.length} users have invalid data`);
+                    return;
+                }
+
+                console.log('[LOAD-STATS] Step 6: User data validated');
+
+                // Step 7: Calculate statistics
+                const totalUsers = users.length;
+                const totalAdmins = users.filter(u => u.role === 'admin').length;
+                const totalManagers = users.filter(u => u.role === 'manager').length;
+                const totalActive = users.filter(u => u.status === 'Active').length;
+                const latestUser = users.length > 0 ? users[users.length - 1].username : 'N/A';
+
+                console.log('[LOAD-STATS] Step 7: Statistics calculated');
+
+                // Step 8: Update DOM elements
+                totalUsersEl.textContent = totalUsers;
+                totalAdminsEl.textContent = totalAdmins;
+                totalManagersEl.textContent = totalManagers;
+                totalActiveEl.textContent = totalActive;
+                latestUserEl.textContent = latestUser;
+                if (totalTransactionsEl) {
+                    totalTransactionsEl.textContent = '0';
+                }
+
+                console.log('[LOAD-STATS] Step 8: UI updated');
+                console.log('[LOAD-STATS] Statistics - Total:', totalUsers, 'Admins:', totalAdmins, 'Managers:', totalManagers, 'Active:', totalActive);
+
+            } catch (error) {
+                console.error('[LOAD-STATS] Error:', error);
+
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
+                } else if (error instanceof SyntaxError) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format from server');
+                } else {
+                    showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while loading statistics');
+                }
             }
         }
-    }
 
-    // Load user list
-    async function loadUserList() {
-        const userListBody = document.getElementById('user-list-body');
-        
-        try {
-            // Step 1: Validate DOM element exists
-            if (!userListBody) {
-                showError('UNKNOWN_ERROR', 'User list container not found on page');
-                return;
-            }
-            
-            console.log('[LOAD-USERS] Step 1: DOM element validated');
-            
-            // Step 2: Clear existing list
-            userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading users...</td></tr>';
-            console.log('[LOAD-USERS] Step 2: List cleared');
-            
-            // Step 3: Send fetch request
-            const response = await fetch('http://127.0.0.1:8000/users');
-            
-            console.log('[LOAD-USERS] Step 3: Request sent, status:', response.status);
-            
-            // Step 4: Validate response status
-            if (!response.ok) {
-                if (response.status === 401) {
-                    showError('VALIDATION_FAILED', 'Unauthorized: Please log in again');
-                } else if (response.status === 403) {
-                    showError('VALIDATION_FAILED', 'You do not have permission to view users');
-                } else if (response.status === 404) {
-                    showError('UNKNOWN_ERROR', 'Users endpoint not found');
-                } else if (response.status >= 500) {
-                    showError('SERVER_NOT_CONNECTED', 'Server error occurred');
-                } else {
-                    showError('UNKNOWN_ERROR', 'Failed to fetch users');
+        // Load user list
+        async function loadUserList() {
+            const userListBody = document.getElementById('user-list-body');
+
+            try {
+                // Step 1: Validate DOM element exists
+                if (!userListBody) {
+                    showError('UNKNOWN_ERROR', 'User list container not found on page');
+                    return;
                 }
-                userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading users</td></tr>';
-                return;
-            }
-            
-            console.log('[LOAD-USERS] Step 4: Response validated');
-            
-            // Step 5: Parse JSON response
-            const users = await response.json();
-            
-            if (!Array.isArray(users)) {
-                showError('UNKNOWN_ERROR', 'Invalid response format: expected user array');
-                return;
-            }
-            
-            console.log('[LOAD-USERS] Step 5: Response parsed, found', users.length, 'users');
-            
-            // Step 6: Validate users have required fields
-            const invalidUsers = users.filter(u => !u.id || !u.username || !u.role || !u.status);
-            if (invalidUsers.length > 0) {
-                showError('UNKNOWN_ERROR', `${invalidUsers.length} users have invalid data`);
-                return;
-            }
-            
-            console.log('[LOAD-USERS] Step 6: User data validated');
-            
-            // Step 7: Build user rows
-            userListBody.innerHTML = users.map(user => `
+
+                console.log('[LOAD-USERS] Step 1: DOM element validated');
+
+                // Step 2: Clear existing list
+                userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading users...</td></tr>';
+                console.log('[LOAD-USERS] Step 2: List cleared');
+
+                // Step 3: Send fetch request
+                const response = await fetch('http://127.0.0.1:8000/users');
+
+                console.log('[LOAD-USERS] Step 3: Request sent, status:', response.status);
+
+                // Step 4: Validate response status
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError('VALIDATION_FAILED', 'Unauthorized: Please log in again');
+                    } else if (response.status === 403) {
+                        showError('VALIDATION_FAILED', 'You do not have permission to view users');
+                    } else if (response.status === 404) {
+                        showError('UNKNOWN_ERROR', 'Users endpoint not found');
+                    } else if (response.status >= 500) {
+                        showError('SERVER_NOT_CONNECTED', 'Server error occurred');
+                    } else {
+                        showError('UNKNOWN_ERROR', 'Failed to fetch users');
+                    }
+                    userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading users</td></tr>';
+                    return;
+                }
+
+                console.log('[LOAD-USERS] Step 4: Response validated');
+
+                // Step 5: Parse JSON response
+                const users = await response.json();
+
+                if (!Array.isArray(users)) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format: expected user array');
+                    return;
+                }
+
+                console.log('[LOAD-USERS] Step 5: Response parsed, found', users.length, 'users');
+
+                // Step 6: Validate users have required fields
+                const invalidUsers = users.filter(u => !u.id || !u.username || !u.role || !u.status);
+                if (invalidUsers.length > 0) {
+                    showError('UNKNOWN_ERROR', `${invalidUsers.length} users have invalid data`);
+                    return;
+                }
+
+                console.log('[LOAD-USERS] Step 6: User data validated');
+
+                // Step 7: Build user rows
+                userListBody.innerHTML = users.map(user => `
                 <tr>
                     <td>${user.username}</td>
                     <td><span class="badge badge-${user.role}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
@@ -685,395 +689,447 @@
                     </td>
                 </tr>
             `).join('');
-            
-            console.log('[LOAD-USERS] Step 7: User table rendered');
-            
-            // Step 8: Log success
-            console.log('[LOAD-USERS] Step 8: User list loaded successfully with', users.length, 'users');
-            
-        } catch (error) {
-            console.error('[LOAD-USERS] Error:', error);
-            
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
-            } else if (error instanceof SyntaxError) {
-                showError('UNKNOWN_ERROR', 'Invalid response format from server');
-            } else {
-                showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while loading users');
-            }
-            
-            userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading users</td></tr>';
-        }
-    }
 
-    // Handle create user
-    async function handleCreateUser(event) {
-        try {
-            event.preventDefault();
-            
-            // Step 1: Get form values
-            const username = document.getElementById('create-username').value;
-            const password = document.getElementById('create-password').value;
-            const email = document.getElementById('create-email').value;
-            const role = document.getElementById('create-role').value;
-            
-            console.log('[CREATE-USER] Step 1: Retrieved form values');
-            
-            // Step 2: Validate required fields
-            if (!username || username.trim() === '') {
-                showError('VALIDATION_FAILED', 'Username is required');
-                return;
+                console.log('[LOAD-USERS] Step 7: User table rendered');
+
+                // Step 8: Log success
+                console.log('[LOAD-USERS] Step 8: User list loaded successfully with', users.length, 'users');
+
+            } catch (error) {
+                console.error('[LOAD-USERS] Error:', error);
+
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
+                } else if (error instanceof SyntaxError) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format from server');
+                } else {
+                    showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while loading users');
+                }
+
+                userListBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading users</td></tr>';
             }
-            
-            if (!password || password.trim() === '') {
-                showError('VALIDATION_FAILED', 'Password is required');
-                return;
-            }
-            
-            if (!role || role === '') {
-                showError('VALIDATION_FAILED', 'Role must be selected');
-                return;
-            }
-            
-            console.log('[CREATE-USER] Step 2: All required fields validated');
-            
-            // Step 3: Validate username format
-            if (username.length < 3) {
-                showError('VALIDATION_FAILED', 'Username must be at least 3 characters');
-                return;
-            }
-            
-            if (username.length > 50) {
-                showError('VALIDATION_FAILED', 'Username must be less than 50 characters');
-                return;
-            }
-            
-            // Step 4: Validate password strength
-            if (password.length < 6) {
-                showError('VALIDATION_FAILED', 'Password must be at least 6 characters');
-                return;
-            }
-            
-            console.log('[CREATE-USER] Step 3-4: Username and password format validated');
-            
-            // Step 5: Validate email format (if provided)
-            if (email && email.trim() !== '') {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    showError('VALIDATION_FAILED', 'Invalid email format');
+        }
+
+        // Handle create user
+        async function handleCreateUser(event) {
+            try {
+                event.preventDefault();
+
+                // Step 1: Get form values
+                const username = document.getElementById('create-username').value;
+                const password = document.getElementById('create-password').value;
+                const email = document.getElementById('create-email').value;
+                const role = document.getElementById('create-role').value;
+
+                console.log('[CREATE-USER] Step 1: Retrieved form values');
+
+                // Step 2: Validate required fields
+                if (!username || username.trim() === '') {
+                    showError('VALIDATION_FAILED', 'Username is required');
                     return;
                 }
+
+                if (!password || password.trim() === '') {
+                    showError('VALIDATION_FAILED', 'Password is required');
+                    return;
+                }
+
+                if (!role || role === '') {
+                    showError('VALIDATION_FAILED', 'Role must be selected');
+                    return;
+                }
+
+                console.log('[CREATE-USER] Step 2: All required fields validated');
+
+                // Step 3: Validate username format
+                if (username.length < 3) {
+                    showError('VALIDATION_FAILED', 'Username must be at least 3 characters');
+                    return;
+                }
+
+                if (username.length > 50) {
+                    showError('VALIDATION_FAILED', 'Username must be less than 50 characters');
+                    return;
+                }
+
+                // Step 4: Validate password strength
+                if (password.length < 6) {
+                    showError('VALIDATION_FAILED', 'Password must be at least 6 characters');
+                    return;
+                }
+
+                console.log('[CREATE-USER] Step 3-4: Username and password format validated');
+
+                // Step 5: Validate email format (if provided)
+                if (email && email.trim() !== '') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        showError('VALIDATION_FAILED', 'Invalid email format');
+                        return;
+                    }
+                }
+
+                console.log('[CREATE-USER] Step 5: Email format validated');
+
+                // Step 6: Prepare request data
+                const requestBody = {
+                    username: username.trim(),
+                    password: password,
+                    email: email.trim() || null,
+                    role: role
+                };
+
+                console.log('[CREATE-USER] Step 6: Request data prepared');
+
+                // Step 7: Send POST request
+                const response = await fetch('http://127.0.0.1:8000/registration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('[CREATE-USER] Step 7: Request sent, status:', response.status);
+
+                // Step 8: Parse response
+                const result = await response.json();
+                console.log('[CREATE-USER] Step 8: Response parsed');
+
+                // Step 9: Check for success
+                if (response.ok) {
+                    console.log('[CREATE-USER] Step 9: User created successfully');
+
+                    // Step 10: Display success message
+                    showError('CREATE_FAILED', 'User created successfully!', true);
+                    console.log('[CREATE-USER] Step 10: Success message displayed');
+
+                    // Step 11: Clear form
+                    event.target.reset();
+                    console.log('[CREATE-USER] Step 11: Form cleared');
+
+                    // Step 12: Reload user list
+                    setTimeout(() => {
+                        loadUserStats();
+                        loadUserList();
+                        console.log('[CREATE-USER] Step 12: User list reloaded');
+                    }, 1500);
+                } else {
+                    // Step 9: Handle error responses
+                    console.log('[CREATE-USER] Step 9: Server returned error');
+
+                    if (response.status === 400) {
+                        // Validation error
+                        showError('VALIDATION_FAILED', result.detail || 'Invalid user data provided');
+                    } else if (response.status === 409) {
+                        // Conflict - user already exists
+                        showError('CREATE_FAILED', result.detail || 'User with this username already exists');
+                    } else if (response.status === 403) {
+                        // Forbidden - insufficient permissions
+                        showError('CREATE_FAILED', 'You do not have permission to create users');
+                    } else if (response.status >= 500) {
+                        // Server error
+                        showError('SERVER_NOT_CONNECTED', 'Server error: ' + (result.detail || 'Please try again later'));
+                    } else {
+                        // Unknown error
+                        showError('CREATE_FAILED', result.detail || 'Failed to create user');
+                    }
+                }
+            } catch (error) {
+                console.error('[CREATE-USER] Error:', error);
+
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
+                } else if (error instanceof SyntaxError) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format from server');
+                } else {
+                    showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while creating user');
+                }
             }
-            
-            console.log('[CREATE-USER] Step 5: Email format validated');
-            
-            // Step 6: Prepare request data
-            const requestBody = {
-                username: username.trim(),
-                password: password,
-                email: email.trim() || null,
-                role: role
-            };
-            
-            console.log('[CREATE-USER] Step 6: Request data prepared');
-            
-            // Step 7: Send POST request
-            const response = await fetch('http://127.0.0.1:8000/registration', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            console.log('[CREATE-USER] Step 7: Request sent, status:', response.status);
-            
-            // Step 8: Parse response
-            const result = await response.json();
-            console.log('[CREATE-USER] Step 8: Response parsed');
-            
-            // Step 9: Check for success
-            if (response.ok) {
-                console.log('[CREATE-USER] Step 9: User created successfully');
-                
-                // Step 10: Display success message
-                showError('CREATE_FAILED', 'User created successfully!', true);
-                console.log('[CREATE-USER] Step 10: Success message displayed');
-                
-                // Step 11: Clear form
-                event.target.reset();
-                console.log('[CREATE-USER] Step 11: Form cleared');
-                
-                // Step 12: Reload user list
-                setTimeout(() => {
+        }
+
+        // Open edit user modal
+        function openEditUserModal(userId, username) {
+            try {
+                currentEditUserId = userId;
+                const editModal = document.getElementById('editUserModal');
+                if (!editModal) {
+                    console.error('[ADMIN] Edit modal not found');
+                    return;
+                }
+
+                document.getElementById('edit-username').value = username;
+                document.getElementById('edit-password').value = '';
+                document.getElementById('edit-email').value = '';
+                document.getElementById('edit-role').value = 'user';
+                editModal.classList.add('active');
+                console.log('[ADMIN] Edit modal opened for user:', username);
+            } catch (e) {
+                console.error('[ADMIN] Error opening edit modal:', e);
+                alert('Error opening edit dialog');
+            }
+        }
+
+        // Close edit user modal
+        function closeEditUserModal() {
+            try {
+                const editModal = document.getElementById('editUserModal');
+                if (editModal) {
+                    editModal.classList.remove('active');
+                }
+                currentEditUserId = null;
+            } catch (e) {
+                console.error('[ADMIN] Error closing edit modal:', e);
+            }
+        }
+
+        // Handle update user
+        async function handleUpdateUser(event) {
+            try {
+                event.preventDefault();
+
+                const username = document.getElementById('edit-username').value;
+                const password = document.getElementById('edit-password').value;
+                const email = document.getElementById('edit-email').value;
+                const role = document.getElementById('edit-role').value;
+
+                if (!username || !role) {
+                    showError('UPDATE_FAILED', 'Please fill in required fields');
+                    return;
+                }
+
+                const currentUserId = localStorage.getItem('userId');
+                if (!currentUserId) {
+                    showError('VALIDATION_FAILED', 'Session expired. Please log in again.');
+                    return;
+                }
+
+                console.log('[ADMIN] Updating user:', currentEditUserId, { username, role });
+
+                const requestBody = {
+                    current_user_id: parseInt(currentUserId),
+                    username: username,
+                    role: role
+                };
+
+                if (password) requestBody.password = password;
+                if (email) requestBody.email = email;
+
+                const response = await fetch(`http://127.0.0.1:8000/users/${currentEditUserId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (response.ok) {
+                    showError('UPDATE_FAILED', 'User updated successfully!', true);
+                    closeEditUserModal();
+                    loadUserList();
                     loadUserStats();
-                    loadUserList();
-                    console.log('[CREATE-USER] Step 12: User list reloaded');
-                }, 1500);
-            } else {
-                // Step 9: Handle error responses
-                console.log('[CREATE-USER] Step 9: Server returned error');
-                
-                if (response.status === 400) {
-                    // Validation error
-                    showError('VALIDATION_FAILED', result.detail || 'Invalid user data provided');
-                } else if (response.status === 409) {
-                    // Conflict - user already exists
-                    showError('CREATE_FAILED', result.detail || 'User with this username already exists');
-                } else if (response.status === 403) {
-                    // Forbidden - insufficient permissions
-                    showError('CREATE_FAILED', 'You do not have permission to create users');
-                } else if (response.status >= 500) {
-                    // Server error
-                    showError('SERVER_NOT_CONNECTED', 'Server error: ' + (result.detail || 'Please try again later'));
                 } else {
-                    // Unknown error
-                    showError('CREATE_FAILED', result.detail || 'Failed to create user');
+                    const result = await response.json();
+                    showError('UPDATE_FAILED', result.detail || 'Failed to update user');
                 }
-            }
-        } catch (error) {
-            console.error('[CREATE-USER] Error:', error);
-            
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
-            } else if (error instanceof SyntaxError) {
-                showError('UNKNOWN_ERROR', 'Invalid response format from server');
-            } else {
-                showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while creating user');
+            } catch (e) {
+                console.error('[ADMIN] Error updating user:', e);
+                showError('UPDATE_FAILED', 'An unexpected error occurred: ' + e.message);
             }
         }
-    }
 
-    // Open edit user modal
-    function openEditUserModal(userId, username) {
-        try {
-            currentEditUserId = userId;
-            const editModal = document.getElementById('editUserModal');
-            if (!editModal) {
-                console.error('[ADMIN] Edit modal not found');
-                return;
-            }
-            
-            document.getElementById('edit-username').value = username;
-            document.getElementById('edit-password').value = '';
-            document.getElementById('edit-email').value = '';
-            document.getElementById('edit-role').value = 'user';
-            editModal.classList.add('active');
-            console.log('[ADMIN] Edit modal opened for user:', username);
-        } catch (e) {
-            console.error('[ADMIN] Error opening edit modal:', e);
-            alert('Error opening edit dialog');
-        }
-    }
-
-    // Close edit user modal
-    function closeEditUserModal() {
-        try {
-            const editModal = document.getElementById('editUserModal');
-            if (editModal) {
-                editModal.classList.remove('active');
-            }
-            currentEditUserId = null;
-        } catch (e) {
-            console.error('[ADMIN] Error closing edit modal:', e);
-        }
-    }
-
-    // Handle update user
-    function handleUpdateUser(event) {
-        try {
-            event.preventDefault();
-            
-            const username = document.getElementById('edit-username').value;
-            const password = document.getElementById('edit-password').value;
-            const email = document.getElementById('edit-email').value;
-            const role = document.getElementById('edit-role').value;
-
-            if (!username || !role) {
-                alert('Please fill in required fields');
-                return;
-            }
-
-            console.log('[ADMIN] Updating user:', { username, role });
-
-            // Mock success - replace with API call
-            alert('User updated successfully!');
-            closeEditUserModal();
-            loadUserList();
-        } catch (e) {
-            console.error('[ADMIN] Error updating user:', e);
-            alert('Error updating user');
-        }
-    }
-
-    // Toggle user status (activate/deactivate)
-    async function toggleUserStatus(userId, currentStatus, username) {
-        try {
-            // Step 1: Validate parameters
-            if (!userId || !currentStatus || !username) {
-                showError('VALIDATION_FAILED', 'Invalid user information');
-                return;
-            }
-            
-            console.log('[TOGGLE-STATUS] Step 1: Parameters validated');
-            
-            // Step 2: Determine new status
-            const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
-            const isActive = newStatus === 'Active';
-            
-            console.log('[TOGGLE-STATUS] Step 2: New status determined:', newStatus);
-            
-            // Step 3: Get user confirmation
-            if (!confirm(`Are you sure you want to change user "${username}" status to ${newStatus.toLowerCase()}?`)) {
-                console.log('[TOGGLE-STATUS] Step 3: User cancelled operation');
-                return;
-            }
-            
-            console.log('[TOGGLE-STATUS] Step 3: User confirmed operation');
-            
-            // Step 4: Prepare request
-            const requestBody = { is_active: isActive };
-            console.log('[TOGGLE-STATUS] Step 4: Request prepared');
-            
-            // Step 5: Send PUT request
-            const response = await fetch(`http://127.0.0.1:8000/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            console.log('[TOGGLE-STATUS] Step 5: Request sent, status:', response.status);
-            
-            // Step 6: Parse response
-            const result = await response.json();
-            console.log('[TOGGLE-STATUS] Step 6: Response parsed');
-            
-            // Step 7: Check for success
-            if (response.ok) {
-                console.log('[TOGGLE-STATUS] Step 7: Status updated successfully');
-                
-                // Step 8: Validate response data
-                if (!result.id || !result.username || !result.status) {
-                    showError('UNKNOWN_ERROR', 'Invalid response from server');
+        // Toggle user status (activate/deactivate)
+        async function toggleUserStatus(userId, currentStatus, username) {
+            try {
+                // Step 1: Validate parameters
+                if (!userId || !currentStatus || !username) {
+                    showError('VALIDATION_FAILED', 'Invalid user information');
                     return;
                 }
-                
-                console.log('[TOGGLE-STATUS] Step 8: Response data validated');
-                
-                // Step 9: Show success message
-                showError('UPDATE_FAILED', `User "${result.username}" is now ${result.status}`, true);
-                console.log('[TOGGLE-STATUS] Step 9: Success message displayed');
-                
-                // Step 10: Reload user list
-                setTimeout(() => {
-                    loadUserList();
-                    console.log('[TOGGLE-STATUS] Step 10: User list reloaded');
-                }, 1000);
-            } else {
-                // Step 7: Handle error responses
-                console.log('[TOGGLE-STATUS] Step 7: Server returned error');
-                
-                if (response.status === 400) {
-                    showError('VALIDATION_FAILED', result.detail || 'Invalid status value');
-                } else if (response.status === 403) {
-                    showError('UPDATE_FAILED', 'You do not have permission to update user status');
-                } else if (response.status === 404) {
-                    showError('UPDATE_FAILED', 'User not found');
-                } else if (response.status >= 500) {
-                    showError('SERVER_NOT_CONNECTED', 'Server error: ' + (result.detail || 'Please try again later'));
+
+                console.log('[TOGGLE-STATUS] Step 1: Parameters validated');
+
+                // Step 2: Determine new status
+                const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+                const isActive = newStatus === 'Active';
+
+                console.log('[TOGGLE-STATUS] Step 2: New status determined:', newStatus);
+
+                // Step 3: Get user confirmation
+                if (!confirm(`Are you sure you want to change user "${username}" status to ${newStatus.toLowerCase()}?`)) {
+                    console.log('[TOGGLE-STATUS] Step 3: User cancelled operation');
+                    return;
+                }
+
+                console.log('[TOGGLE-STATUS] Step 3: User confirmed operation');
+
+                // Step 4: Prepare request
+                const requestBody = { is_active: isActive };
+                console.log('[TOGGLE-STATUS] Step 4: Request prepared');
+
+                // Step 5: Send PUT request
+                const response = await fetch(`http://127.0.0.1:8000/users/${userId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('[TOGGLE-STATUS] Step 5: Request sent, status:', response.status);
+
+                // Step 6: Parse response
+                const result = await response.json();
+                console.log('[TOGGLE-STATUS] Step 6: Response parsed');
+
+                // Step 7: Check for success
+                if (response.ok) {
+                    console.log('[TOGGLE-STATUS] Step 7: Status updated successfully');
+
+                    // Step 8: Validate response data
+                    if (!result.id || !result.username || !result.status) {
+                        showError('UNKNOWN_ERROR', 'Invalid response from server');
+                        return;
+                    }
+
+                    console.log('[TOGGLE-STATUS] Step 8: Response data validated');
+
+                    // Step 9: Show success message
+                    showError('UPDATE_FAILED', `User "${result.username}" is now ${result.status}`, true);
+                    console.log('[TOGGLE-STATUS] Step 9: Success message displayed');
+
+                    // Step 10: Reload user list
+                    setTimeout(() => {
+                        loadUserList();
+                        console.log('[TOGGLE-STATUS] Step 10: User list reloaded');
+                    }, 1000);
                 } else {
-                    showError('UPDATE_FAILED', result.detail || `Failed to ${newStatus.toLowerCase()} user`);
+                    // Step 7: Handle error responses
+                    console.log('[TOGGLE-STATUS] Step 7: Server returned error');
+
+                    if (response.status === 400) {
+                        showError('VALIDATION_FAILED', result.detail || 'Invalid status value');
+                    } else if (response.status === 403) {
+                        showError('UPDATE_FAILED', 'You do not have permission to update user status');
+                    } else if (response.status === 404) {
+                        showError('UPDATE_FAILED', 'User not found');
+                    } else if (response.status >= 500) {
+                        showError('SERVER_NOT_CONNECTED', 'Server error: ' + (result.detail || 'Please try again later'));
+                    } else {
+                        showError('UPDATE_FAILED', result.detail || `Failed to ${newStatus.toLowerCase()} user`);
+                    }
+                }
+            } catch (error) {
+                console.error('[TOGGLE-STATUS] Error:', error);
+
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
+                } else if (error instanceof SyntaxError) {
+                    showError('UNKNOWN_ERROR', 'Invalid response format from server');
+                } else {
+                    showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while updating user status');
                 }
             }
-        } catch (error) {
-            console.error('[TOGGLE-STATUS] Error:', error);
-            
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                showError('SERVER_NOT_CONNECTED', 'Cannot reach the server. Please ensure the backend is running.');
-            } else if (error instanceof SyntaxError) {
-                showError('UNKNOWN_ERROR', 'Invalid response format from server');
-            } else {
-                showError('UNKNOWN_ERROR', error.message || 'An unexpected error occurred while updating user status');
-            }
         }
-    }
 
-    // Delete user
-    function deleteUser(userId) {
-        try {
-            if (confirm('Are you sure you want to delete this user?')) {
+        // Delete user
+        async function deleteUser(userId) {
+            try {
+                if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                    return;
+                }
+
+                const currentUserId = localStorage.getItem('userId');
+                if (!currentUserId) {
+                    showError('VALIDATION_FAILED', 'Session expired. Please log in again.');
+                    return;
+                }
+
                 console.log('[ADMIN] Deleting user:', userId);
-                alert('User deleted successfully!');
-                loadUserList();
+
+                const response = await fetch(`http://127.0.0.1:8000/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ current_user_id: parseInt(currentUserId) })
+                });
+
+                if (response.ok) {
+                    showError('DELETE_FAILED', 'User deleted successfully!', true);
+                    loadUserList();
+                    loadUserStats();
+                } else {
+                    const result = await response.json();
+                    showError('DELETE_FAILED', result.detail || 'Failed to delete user');
+                }
+            } catch (e) {
+                console.error('[ADMIN] Error deleting user:', e);
+                showError('DELETE_FAILED', 'An unexpected error occurred: ' + e.message);
             }
-        } catch (e) {
-            console.error('[ADMIN] Error deleting user:', e);
-            alert('Error deleting user');
         }
-    }
 
-    // Generate report
-    function generateReport() {
-        try {
-            const reportType = document.getElementById('report-type').value;
-            const startDate = document.getElementById('report-start-date').value;
-            const endDate = document.getElementById('report-end-date').value;
-            const reportList = document.getElementById('report-list');
+        // Generate report
+        function generateReport() {
+            try {
+                const reportType = document.getElementById('report-type').value;
+                const startDate = document.getElementById('report-start-date').value;
+                const endDate = document.getElementById('report-end-date').value;
+                const reportList = document.getElementById('report-list');
 
-            if (!reportType) {
-                alert('Please select a report type');
-                return;
-            }
+                if (!reportType) {
+                    alert('Please select a report type');
+                    return;
+                }
 
-            if (!reportList) {
-                console.error('[ADMIN] Report list element not found');
-                alert('Error: Report list element missing');
-                return;
-            }
+                if (!reportList) {
+                    console.error('[ADMIN] Report list element not found');
+                    alert('Error: Report list element missing');
+                    return;
+                }
 
-            console.log('[ADMIN] Generating report:', { reportType, startDate, endDate });
+                console.log('[ADMIN] Generating report:', { reportType, startDate, endDate });
 
-            const reportDate = new Date().toLocaleDateString();
-            const reportHTML = `
+                const reportDate = new Date().toLocaleDateString();
+                const reportHTML = `
                 <div style="padding: 10px; background: var(--light-bg); border-radius: 6px; margin-bottom: 10px;">
                     <p style="margin: 0; font-weight: 600; color: var(--text-dark);">${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report</p>
                     <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--text-light);">${reportDate}</p>
                 </div>
             `;
 
-            if (reportList.innerHTML.includes('No reports')) {
-                reportList.innerHTML = reportHTML;
-            } else {
-                reportList.innerHTML = reportHTML + reportList.innerHTML;
+                if (reportList.innerHTML.includes('No reports')) {
+                    reportList.innerHTML = reportHTML;
+                } else {
+                    reportList.innerHTML = reportHTML + reportList.innerHTML;
+                }
+
+                alert('Report generated successfully!');
+            } catch (e) {
+                console.error('[ADMIN] Error generating report:', e);
+                alert('Error generating report');
             }
-
-            alert('Report generated successfully!');
-        } catch (e) {
-            console.error('[ADMIN] Error generating report:', e);
-            alert('Error generating report');
         }
-    }
 
-    // Download report as PDF
-    function downloadReport() {
-        try {
-            alert('Report will be downloaded as PDF (Feature in progress)');
-        } catch (e) {
-            console.error('[ADMIN] Error downloading report:', e);
-            alert('Error downloading report');
-        }
-    }
-
-    // Close modal when clicking outside
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('active');
+        // Download report as PDF
+        function downloadReport() {
+            try {
+                alert('Report will be downloaded as PDF (Feature in progress)');
+            } catch (e) {
+                console.error('[ADMIN] Error downloading report:', e);
+                alert('Error downloading report');
             }
+        }
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>

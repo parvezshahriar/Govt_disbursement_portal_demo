@@ -24,6 +24,7 @@ class AuditLog(Base):
     old_values = Column(JSON, nullable=True)  # Previous values (NULL for INSERT)
     new_values = Column(JSON, nullable=True)  # New values (NULL for DELETE)
     changed_columns = Column(JSON, nullable=True)  # List of columns that changed
+    employee_id = Column(String, nullable=True, index=True)  # Employee who made the change
     user_id = Column(Integer, nullable=True, index=True)  # User who made the change
     timestamp = Column(DateTime, default=func.now(), index=True)  # When the change occurred
     description = Column(Text, nullable=True)  # Additional context
@@ -36,7 +37,7 @@ def create_audit_triggers():
     """
     
     try:
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             # Create the audit function with session variable support
             audit_function_sql = text("""
             CREATE OR REPLACE FUNCTION audit_trigger_function()
@@ -47,9 +48,10 @@ def create_audit_triggers():
                 changed_cols TEXT[];
                 col_name TEXT;
                 emp_id TEXT;
+                usr_id INTEGER;
                 record_id_value TEXT;
             BEGIN
-                -- Get employee_id from session variable (set by application)
+                -- Get employee_id and user_id from session variables (set by application)
                 -- If not set, will be NULL
                 BEGIN
                     emp_id := current_setting('app.current_employee_id', true);
@@ -57,10 +59,44 @@ def create_audit_triggers():
                     emp_id := NULL;
                 END;
                 
+                BEGIN
+                    usr_id := CAST(current_setting('app.current_user_id', true) AS INTEGER);
+                EXCEPTION WHEN OTHERS THEN
+                    usr_id := NULL;
+                END;
+                
                 -- Determine record_id based on table
                 IF TG_TABLE_NAME = 'product_1' THEN
                     -- For product_1 table, use EFTREFNUMBER as record_id
-                    record_id_value := CAST(NEW.EFTREFNUMBER AS TEXT);
+                    IF TG_OP = 'DELETE' THEN
+                        -- Use OLD for DELETE
+                        BEGIN
+                            record_id_value := CAST(OLD."EFTREFNUMBER" AS TEXT);
+                        EXCEPTION WHEN OTHERS THEN
+                            record_id_value := CAST(OLD.eftrefnumber AS TEXT);
+                        END;
+                    ELSE
+                        BEGIN
+                            record_id_value := CAST(NEW."EFTREFNUMBER" AS TEXT);
+                        EXCEPTION WHEN OTHERS THEN
+                            record_id_value := CAST(NEW.eftrefnumber AS TEXT);
+                        END;
+                    END IF;
+                ELSIF TG_TABLE_NAME = 'client_info' THEN
+                    -- For client_info table, use BENEFICIARY_ID as record_id
+                    IF TG_OP = 'DELETE' THEN
+                        BEGIN
+                            record_id_value := CAST(OLD."BENEFICIARY_ID" AS TEXT);
+                        EXCEPTION WHEN OTHERS THEN
+                            record_id_value := CAST(OLD.beneficiary_id AS TEXT);
+                        END;
+                    ELSE
+                        BEGIN
+                            record_id_value := CAST(NEW."BENEFICIARY_ID" AS TEXT);
+                        EXCEPTION WHEN OTHERS THEN
+                            record_id_value := CAST(NEW.beneficiary_id AS TEXT);
+                        END;
+                    END IF;
                 ELSIF TG_TABLE_NAME = 'batch_upload' THEN
                     -- For batch_upload table, use id as record_id
                     IF TG_OP = 'DELETE' THEN
@@ -93,6 +129,7 @@ def create_audit_triggers():
                         record_id, 
                         new_values,
                         employee_id,
+                        user_id,
                         timestamp
                     ) VALUES (
                         TG_TABLE_NAME,
@@ -100,6 +137,7 @@ def create_audit_triggers():
                         record_id_value,
                         new_values,
                         emp_id,
+                        usr_id,
                         NOW()
                     );
                     RETURN NEW;
@@ -127,6 +165,7 @@ def create_audit_triggers():
                         new_values, 
                         changed_columns,
                         employee_id,
+                        user_id,
                         timestamp
                     ) VALUES (
                         TG_TABLE_NAME,
@@ -136,6 +175,7 @@ def create_audit_triggers():
                         new_values,
                         to_json(changed_cols),
                         emp_id,
+                        usr_id,
                         NOW()
                     );
                     RETURN NEW;
@@ -149,6 +189,7 @@ def create_audit_triggers():
                         record_id, 
                         old_values,
                         employee_id,
+                        user_id,
                         timestamp
                     ) VALUES (
                         TG_TABLE_NAME,
@@ -156,6 +197,7 @@ def create_audit_triggers():
                         record_id_value,
                         old_values,
                         emp_id,
+                        usr_id,
                         NOW()
                     );
                     RETURN OLD;
@@ -199,13 +241,19 @@ def create_audit_triggers():
                     FOR EACH ROW
                     EXECUTE FUNCTION audit_trigger_function();
                 """),
+                text("""
+                    DROP TRIGGER IF EXISTS client_info_audit_trigger ON client_info;
+                    CREATE TRIGGER client_info_audit_trigger
+                    AFTER INSERT OR UPDATE OR DELETE ON client_info
+                    FOR EACH ROW
+                    EXECUTE FUNCTION audit_trigger_function();
+                """),
             ]
             
             for trigger_sql in triggers:
                 connection.execute(trigger_sql)
             
             print("[AUDIT_LOG] ✓ All audit triggers created successfully")
-            connection.commit()
             return True
             
     except Exception as e:

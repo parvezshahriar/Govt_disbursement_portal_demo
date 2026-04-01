@@ -12,9 +12,9 @@ from sqlalchemy import text
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from dbmodel import Product, User, UserInfo, Image, BatchUpload
+from dbmodel import Product, User, UserInfo, Image, BatchUpload, ClientInfo
 from database import Session
-from model import ProductSchema, UserCreate, UserLogin, BatchUploadRequest, UserInfoCreate, UserInfoResponse, ImageResponse, BatchUploadResponse
+from model import ProductSchema, UserCreate, UserLogin, BatchUploadRequest, UserInfoCreate, UserInfoResponse, ImageResponse, BatchUploadResponse, UserUpdate
 from rbac import Permission, has_permission, Role
 from login_audit_manager import LoginAuditManager
 from audit_log_manager import AuditLogManager
@@ -210,7 +210,7 @@ async def get_users():
         db.close()
 
 
-# Update user status (activate/deactivate)
+# Deactivation/Status Update (Toggle)
 @app.put('/users/{user_id}/status')
 async def update_user_status(user_id: int, status: dict):
     db = Session()
@@ -223,9 +223,10 @@ async def update_user_status(user_id: int, status: dict):
         user_info = db.query(UserInfo).filter(UserInfo.user_id == user_id).first()
         emp_id = user_info.employee_id if user_info and user_info.employee_id else str(user_id)
         
-        # Set audit employee_id BEFORE updating
+        # Set audit session variables BEFORE updating
         try:
             db.execute(text(f"SET app.current_employee_id = '{emp_id}'"))
+            db.execute(text(f"SET app.current_user_id = '{user_id}'"))
         except:
             pass
         
@@ -249,6 +250,100 @@ async def update_user_status(user_id: int, status: dict):
         db.close()
 
 
+# Update user endpoint
+@app.put('/users/{user_id}')
+async def update_user(user_id: int, user_data: UserUpdate, current_user_id: int = Body(..., embed=True)):
+    """Update user details - EDIT_USER permission required"""
+    # Check permissions
+    check_permission(current_user_id, Permission.EDIT_USER)
+    
+    db = Session()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update fields if provided
+        if user_data.username:
+            # Check if username already exists for another user
+            existing = db.query(User).filter(User.username == user_data.username, User.id != user_id).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Username already exists")
+            user.username = user_data.username
+        
+        if user_data.password:
+            user.password = user_data.password
+            
+        if user_data.email:
+            user.email = user_data.email
+            
+        if user_data.role:
+            user.role = user_data.role
+            
+        if user_data.is_active is not None:
+            user.is_active = user_data.is_active
+            
+        db.commit()
+        db.refresh(user)
+        
+        return {
+            "message": "User updated successfully",
+            "id": user.id,
+            "username": user.username,
+            "role": user.role,
+            "status": "Active" if user.is_active else "Inactive"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        db.close()
+
+
+# Delete user endpoint
+@app.delete('/users/{user_id}')
+async def delete_user(user_id: int, current_user_id: int = Body(..., embed=True)):
+    """Delete a user - DELETE_USER permission required"""
+    # Check permissions
+    check_permission(current_user_id, Permission.DELETE_USER)
+    
+    db = Session()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Prevent self-deletion
+        if user_id == current_user_id:
+            raise HTTPException(status_code=400, detail="You cannot delete your own account")
+            
+        # Optional: Audit logging setup
+        try:
+            db.execute(text(f"SET app.current_employee_id = '{current_user_id}'"))
+        except:
+            pass
+            
+        # Delete related user_info first if exists
+        user_info = db.query(UserInfo).filter(UserInfo.user_id == user_id).first()
+        if user_info:
+            db.delete(user_info)
+            
+        # Delete the user
+        db.delete(user)
+        db.commit()
+        
+        return {"status": "success", "message": f"User {user_id} deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        db.close()
+
+
 # Get all products
 @app.get('/product')
 def get_products(user_id: int = None):
@@ -259,24 +354,26 @@ def get_products(user_id: int = None):
         if user_id:
             check_permission(user_id, Permission.VIEW_PRODUCTS)
         
-        products = db.query(Product).all()
+        # Join Product with ClientInfo
+        results = db.query(Product, ClientInfo).join(ClientInfo, Product.BENEFICIARY_ID == ClientInfo.BENEFICIARY_ID).all()
         product_list = []
         
-        for product in products:
+        for product, client in results:
             product_data = {
                 "EFTREFNUMBER": product.EFTREFNUMBER,
-                "CRACCOUNTTITLE": product.CRACCOUNTTITLE,
-                "CRACCOUNTTYPE": product.CRACCOUNTTYPE,
-                "CRACCOUNTNO": product.CRACCOUNTNO,
-                "CRROUTINGNO": product.CRROUTINGNO,
+                "CRACCOUNTTITLE": client.name,
+                "CRACCOUNTTYPE": client.CRACCOUNTTYPE,
+                "CRACCOUNTNO": client.CRACCOUNTNO,
+                "CRROUTINGNO": client.CRROUTINGNO,
                 "CRAMOUNT": product.CRAMOUNT,
-                "BENEFICIARY_ID": product.BENEFICIARY_ID,
-                "MOBILE": product.MOBILE,
-                "NID_NO": product.NID_NO,
+                "BENEFICIARY_ID": client.BENEFICIARY_ID,
+                "MOBILE": client.MOBILE,
+                "NID_NO": client.NID_NO,
                 "MIN_CODE": product.MIN_CODE,
                 "DEPT_CODE": product.DEPT_CODE,
                 "PAYMENT_CYCLE_NAME_EN": product.PAYMENT_CYCLE_NAME_EN,
-                "SCHEME_CODE": product.SCHEME_CODE
+                "SCHEME_CODE": product.SCHEME_CODE,
+                "gender": getattr(client, 'gender', None)
             }
             product_list.append(product_data)
         
@@ -306,10 +403,11 @@ def update_product(product_id: str, product: ProductSchema, user_id: int = None)
             if user_info and user_info.employee_id:
                 emp_id = user_info.employee_id
         
-        # Set audit employee_id BEFORE updating
+        # Set audit session variables BEFORE updating
         if emp_id:
             try:
                 db.execute(text(f"SET app.current_employee_id = '{emp_id}'"))
+                db.execute(text(f"SET app.current_user_id = '{user_id}'"))
             except:
                 pass
 
@@ -318,26 +416,27 @@ def update_product(product_id: str, product: ProductSchema, user_id: int = None)
         db_product.CRACCOUNTNO = product.CRACCOUNTNO
         db_product.CRROUTINGNO = product.CRROUTINGNO
         db_product.CRAMOUNT = product.CRAMOUNT
-        db_product.BENEFICIARY_ID = product.BENEFICIARY_ID
-        db_product.MOBILE = product.MOBILE
-        db_product.NID_NO = product.NID_NO
         db_product.MIN_CODE = product.MIN_CODE
         db_product.DEPT_CODE = product.DEPT_CODE
         db_product.PAYMENT_CYCLE_NAME_EN = product.PAYMENT_CYCLE_NAME_EN
         db_product.SCHEME_CODE = product.SCHEME_CODE
+
+        # Update Client Info as well
+        client = db.query(ClientInfo).filter(ClientInfo.BENEFICIARY_ID == db_product.BENEFICIARY_ID).first()
+        if client:
+            client.name = product.CRACCOUNTTITLE
+            client.CRACCOUNTTYPE = product.CRACCOUNTTYPE
+            client.CRACCOUNTNO = product.CRACCOUNTNO
+            client.CRROUTINGNO = product.CRROUTINGNO
+            client.MOBILE = product.MOBILE
+            client.NID_NO = product.NID_NO
 
         db.commit()
         db.refresh(db_product)
 
         return {
             "EFTREFNUMBER": db_product.EFTREFNUMBER,
-            "CRACCOUNTTITLE": db_product.CRACCOUNTTITLE,
-            "CRACCOUNTTYPE": db_product.CRACCOUNTTYPE,
-            "CRACCOUNTNO": db_product.CRACCOUNTNO,
-            "CRAMOUNT": db_product.CRAMOUNT,
-            "BENEFICIARY_ID": db_product.BENEFICIARY_ID,
-            "MOBILE": db_product.MOBILE,
-            "message": "Product updated successfully"
+            "message": "Product and Client information updated successfully"
         }
     finally:
         db.close()
@@ -364,10 +463,11 @@ def delete_product(product_id: str, user_id: int = None):
             if user_info and user_info.employee_id:
                 emp_id = user_info.employee_id
         
-        # Set audit employee_id BEFORE deleting
+        # Set audit session variables BEFORE deleting
         if emp_id:
             try:
                 db.execute(text(f"SET app.current_employee_id = '{emp_id}'"))
+                db.execute(text(f"SET app.current_user_id = '{user_id}'"))
             except:
                 pass
 
@@ -387,14 +487,14 @@ async def upload_csv(file: UploadFile = File(...), user_id: int = None):
     if user_id:
         check_permission(user_id, Permission.UPLOAD_CSV)
     
+    db = Session()
     try:
         contents = await file.read()
         csv_text = contents.decode('utf-8')
 
         reader = csv.DictReader(csv_text.strip().split('\n'))
-        db = Session()
         success_count = 0
-        error_count = 0 ####start
+        error_count = 0
         
         # Columns to check for duplicates
         duplicate_check_columns = ['EFTREFNUMBER', 'CRACCOUNTNO', 'BENEFICIARY_ID', 'NID_NO']
@@ -428,18 +528,18 @@ async def upload_csv(file: UploadFile = File(...), user_id: int = None):
         for col in duplicate_check_columns:
             if seen_in_csv[col]:
                 # Query database for existing values
-                query = db.query(Product).filter(
-                    getattr(Product, col).in_(list(seen_in_csv[col]))
+                model = Product if col == 'EFTREFNUMBER' else ClientInfo
+                query = db.query(model).filter(
+                    getattr(model, col).in_(list(seen_in_csv[col]))
                 ).all()
                 
                 if query:
-                    for product in query:
-                        db_value = getattr(product, col)
+                    for item in query:
+                        db_value = getattr(item, col)
                         db_duplicate_errors.append(f"Column '{col}' with value '{db_value}' already exists in database")
 
         # If duplicates found in database, return error
         if db_duplicate_errors:
-            db.close()
             return {
                 "success_count": 0,
                 "error_count": len(db_duplicate_errors),
@@ -447,7 +547,19 @@ async def upload_csv(file: UploadFile = File(...), user_id: int = None):
                 "duplicate_errors": db_duplicate_errors
             }
 
+        # Set audit session variables BEFORE creating batch
+        if user_id:
+            try:
+                db.execute(text(f"SET app.current_user_id = '{user_id}'"))
+                # Try to get employee_id for user_id
+                user_info = db.query(UserInfo).filter(UserInfo.user_id == user_id).first()
+                if user_info and user_info.employee_id:
+                    db.execute(text(f"SET app.current_employee_id = '{user_info.employee_id}'"))
+            except:
+                pass
+
         # Create batch upload record
+        batch_id = None
         batch_name = f"CSV_Upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         db_batch = BatchUpload(
             user_id=user_id,
@@ -459,53 +571,58 @@ async def upload_csv(file: UploadFile = File(...), user_id: int = None):
         db.flush()  # Flush to get the batch ID without committing
         batch_id = db_batch.id
         
-        try:
-            total_amount = 0.0
-            error_details = []
-            for row_index, row in enumerate(rows_list, start=2):  # Start at 2 (row 1 is header)
-                try:
-                    amount = float(row.get('CRAMOUNT', 0))
-                    total_amount += amount
-                    
-                    product = Product(
-                        EFTREFNUMBER=row.get('EFTREFNUMBER'),
-                        CRACCOUNTTITLE=row.get('CRACCOUNTTITLE'),
-                        CRACCOUNTTYPE=row.get('CRACCOUNTTYPE'),
-                        CRACCOUNTNO=row.get('CRACCOUNTNO'),
-                        CRROUTINGNO=row.get('CRROUTINGNO') if row.get('CRROUTINGNO') else None,
-                        CRAMOUNT=amount,
-                        BENEFICIARY_ID=row.get('BENEFICIARY_ID'),
-                        MOBILE=row.get('MOBILE'),
-                        NID_NO=row.get('NID_NO'),
-                        MIN_CODE=row.get('MIN_CODE'),
-                        DEPT_CODE=row.get('DEPT_CODE'),
-                        PAYMENT_CYCLE_NAME_EN=row.get('PAYMENT_CYCLE_NAME_EN'),
-                        SCHEME_CODE=row.get('SCHEME_CODE'),
-                        batch_id=batch_id
-                    )
-                    db.add(product)
-                    db.commit()
-                    success_count += 1
-                except Exception as e:
-                    db.rollback()
-                    error_count += 1
-                    error_msg = str(e)
-                    # Extract key info from error
-                    if 'duplicate' in error_msg.lower():
-                        error_details.append(f"Row {row_index}: Duplicate value - {error_msg[:100]}")
-                    elif 'unique' in error_msg.lower():
-                        error_details.append(f"Row {row_index}: Already exists - {error_msg[:100]}")
-                    else:
-                        error_details.append(f"Row {row_index}: {error_msg[:100]}")
-                    print(f"[CSV_UPLOAD] Row {row_index} error: {error_msg}")
-            
-            # Update batch with final totals
-            db_batch.total_rows = success_count
-            db_batch.total_amount = total_amount
-            db_batch.status = 'Completed' if error_count == 0 else 'Completed with Errors'
-            db.commit()
-        finally:
-            db.close()
+        total_amount = 0.0
+        error_details = []
+        for row_index, row in enumerate(rows_list, start=2):  # Start at 2 (row 1 is header)
+            try:
+                amount = float(row.get('CRAMOUNT', 0))
+                total_amount += amount
+                
+                # Upsert Client Info
+                bid = row.get('BENEFICIARY_ID')
+                client = db.query(ClientInfo).filter(ClientInfo.BENEFICIARY_ID == bid).first()
+                if not client:
+                    client = ClientInfo(BENEFICIARY_ID=bid)
+                    db.add(client)
+                
+                client.name = row.get('CRACCOUNTTITLE')
+                client.CRACCOUNTNO = row.get('CRACCOUNTNO')
+                client.CRACCOUNTTYPE = row.get('CRACCOUNTTYPE')
+                client.CRROUTINGNO = row.get('CRROUTINGNO')
+                client.MOBILE = row.get('MOBILE')
+                client.NID_NO = row.get('NID_NO')
+
+                product = Product(
+                    EFTREFNUMBER=row.get('EFTREFNUMBER'),
+                    CRAMOUNT=amount,
+                    BENEFICIARY_ID=bid,
+                    MIN_CODE=row.get('MIN_CODE'),
+                    DEPT_CODE=row.get('DEPT_CODE'),
+                    PAYMENT_CYCLE_NAME_EN=row.get('PAYMENT_CYCLE_NAME_EN'),
+                    SCHEME_CODE=row.get('SCHEME_CODE'),
+                    batch_id=batch_id
+                )
+                db.add(product)
+                db.commit()
+                success_count += 1
+            except Exception as e:
+                db.rollback()
+                error_count += 1
+                error_msg = str(e)
+                # Extract key info from error
+                if 'duplicate' in error_msg.lower():
+                    error_details.append(f"Row {row_index}: Duplicate value - {error_msg[:100]}")
+                elif 'unique' in error_msg.lower():
+                    error_details.append(f"Row {row_index}: Already exists - {error_msg[:100]}")
+                else:
+                    error_details.append(f"Row {row_index}: {error_msg[:100]}")
+                print(f"[CSV_UPLOAD] Row {row_index} error: {error_msg}")
+        
+        # Update batch with final totals
+        db_batch.total_rows = success_count
+        db_batch.total_amount = total_amount
+        db_batch.status = 'Completed' if error_count == 0 else 'Completed with Errors'
+        db.commit()
 
         return {
             "success_count": success_count,
@@ -516,7 +633,12 @@ async def upload_csv(file: UploadFile = File(...), user_id: int = None):
             "error_details": error_details if error_count > 0 else []
         }
     except Exception as e:
+        if 'db' in locals():
+            db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        if 'db' in locals():
+            db.close()
 
 
 # Batch upload endpoint (JSON from frontend)
@@ -577,13 +699,14 @@ async def upload_batch(request_body: dict = Body(...), user_id: int = None):
         for col in duplicate_check_columns:
             if seen_in_batch[col]:
                 # Query database for existing values
-                query = db.query(Product).filter(
-                    getattr(Product, col).in_(list(seen_in_batch[col]))
+                model = Product if col == 'EFTREFNUMBER' else ClientInfo
+                query = db.query(model).filter(
+                    getattr(model, col).in_(list(seen_in_batch[col]))
                 ).all()
                 
                 if query:
-                    for product in query:
-                        db_value = getattr(product, col)
+                    for item in query:
+                        db_value = getattr(item, col)
                         db_duplicate_errors.append(f"Column '{col}' with value '{db_value}' already exists in database")
 
         # If duplicates found in database, return error
@@ -621,16 +744,24 @@ async def upload_batch(request_body: dict = Body(...), user_id: int = None):
                     amount = float(row_dict.get('CRAMOUNT') or 0)
                     total_amount += amount
                     
+                    # Upsert Client Info
+                    bid = row_dict.get('BENEFICIARY_ID')
+                    client = db.query(ClientInfo).filter(ClientInfo.BENEFICIARY_ID == bid).first()
+                    if not client:
+                        client = ClientInfo(BENEFICIARY_ID=bid)
+                        db.add(client)
+                    
+                    client.name = row_dict.get('CRACCOUNTTITLE')
+                    client.CRACCOUNTNO = row_dict.get('CRACCOUNTNO')
+                    client.CRACCOUNTTYPE = row_dict.get('CRACCOUNTTYPE')
+                    client.CRROUTINGNO = row_dict.get('CRROUTINGNO')
+                    client.MOBILE = row_dict.get('MOBILE')
+                    client.NID_NO = row_dict.get('NID_NO')
+
                     product = Product(
                         EFTREFNUMBER=row_dict.get('EFTREFNUMBER'),
-                        CRACCOUNTTITLE=row_dict.get('CRACCOUNTTITLE'),
-                        CRACCOUNTTYPE=row_dict.get('CRACCOUNTTYPE'),
-                        CRACCOUNTNO=row_dict.get('CRACCOUNTNO'),
-                        CRROUTINGNO=row_dict.get('CRROUTINGNO'),
                         CRAMOUNT=amount,
-                        BENEFICIARY_ID=row_dict.get('BENEFICIARY_ID'),
-                        MOBILE=row_dict.get('MOBILE'),
-                        NID_NO=row_dict.get('NID_NO'),
+                        BENEFICIARY_ID=bid,
                         MIN_CODE=row_dict.get('MIN_CODE'),
                         DEPT_CODE=row_dict.get('DEPT_CODE'),
                         PAYMENT_CYCLE_NAME_EN=row_dict.get('PAYMENT_CYCLE_NAME_EN'),

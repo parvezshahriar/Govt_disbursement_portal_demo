@@ -4,7 +4,7 @@ import os
 
 db_url = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres:110032@localhost:5432/postgres",
+    "postgresql+pg8000://postgres:1234@localhost:5432/postgres",
 )
 
 engine = create_engine(db_url)

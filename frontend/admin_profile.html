@@ -1,215 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - Government Disbursement Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="admin_profile.css">
+    <link rel="stylesheet" href="index.css?v=9">
+    <link rel="stylesheet" href="admin_profile.css?v=10">
     <link rel="stylesheet" href="error-handler.css">
 </head>
+
 <body>
 
-<div id="header-container"></div>
+    <div id="header-container"></div>
 
-<div class="container">
-    <div id="sidebar-container"></div>
-    
-    <main class="main-content">
-        <!-- Page Title -->
-        <div class="page-header">
-            <h1>My Profile</h1>
-            <p>Manage your account and personal information</p>
-        </div>
+    <div class="container">
+        <div id="sidebar-container"></div>
 
-        <!-- Profile Layout - Two Column -->
-        <div class="profile-layout">
-            <!-- Left Sidebar -->
-            <aside class="profile-left-panel">
-                <!-- Profile Card -->
-                <div class="profile-card">
-                    <!-- Avatar Section -->
-                    <div class="avatar-container">
-                        <img id="profile-avatar" src="https://via.placeholder.com/120" alt="Profile" class="avatar-img">
-                        <label class="avatar-edit-btn" onclick="document.getElementById('avatar-input').click()" title="Change avatar">
-                            <input type="file" id="avatar-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
-                            <i class="fas fa-camera"></i>
-                        </label>
-                        <div class="status-badge">
-                            <span class="status-dot"></span>
-                            <span class="status-text">Active</span>
+        <main class="main-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <h1>My Profile</h1>
+                <p>Manage your account and personal information</p>
+            </div>
+
+            <!-- Profile Layout - Two Column -->
+            <div class="profile-layout">
+                <!-- Left Sidebar -->
+                <aside class="profile-left-panel">
+                    <!-- Profile Card -->
+                    <div class="profile-card">
+
+                        <!-- Avatar Section -->
+                        <div class="avatar-container">
+                            <img id="card-profile-avatar"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23666666'%3ENo Image%3C/text%3E%3C/svg%3E"
+                                alt="Profile" class="avatar-img"
+                                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 120 120\'%3E%3Crect width=\'120\' height=\'120\' fill=\'%23ffcccc\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'sans-serif\' font-size=\'14\' fill=\'%23cc0000\'%3EError%3C/text%3E%3C/svg%3E';">
+                            <input type="file" id="avatar-input" accept="image/*" style="display:none;"
+                                onchange="handleAvatarUpload(event)">
+                            <label for="avatar-input" class="avatar-edit-btn" title="Change avatar">
+                                <i class="fas fa-camera"></i>
+                            </label>
                         </div>
-                    </div>
 
-                    <!-- Profile Info -->
-                    <h2 id="profile-name" class="profile-username">John Doe</h2>
-                    <p class="profile-role" id="profile-role">User</p>
-                    <!-- Divider -->
-                    <div class="divider"></div>
+                        <!-- Profile Info -->
+                        <h2 id="profile-name" class="profile-username">John Doe</h2>
+                        <p class="profile-employee-id" id="profile-employee-id-display">ID: EMP000</p>
+                        <p class="profile-role" id="profile-role">User</p>
+                        <!-- Divider -->
+                        <div class="divider"></div>
 
-                    <!-- Profile Stats
-                    <div class="profile-stats">
-                        <div class="stat">
-                            <span class="stat-number">24</span>
-                            <span class="stat-label">Transactions</span>
+                        <!-- Action Buttons -->
+                        <div class="profile-actions">
+                            <button class="btn-action primary" onclick="toggleEditMode()">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                            <button class="btn-action secondary" onclick="changePassword()">
+                                <i class="fas fa-lock"></i> Change Password
+                            </button>
                         </div>
-                        <div class="stat">
-                            <span class="stat-number">12</span>
-                            <span class="stat-label">Documents</span>
+                </aside>
+
+                <!-- Right Content Panel -->
+                <div class="profile-right-panel">
+                    <!-- Personal Information Section -->
+                    <section class="profile-section">
+                        <div class="section-title">
+                            <h3><i class="fas fa-user"></i> Personal Information</h3>
+                            <span class="edit-badge" id="edit-badge" style="display:none;">
+                                <i class="fas fa-pencil-alt"></i> Editing
+                            </span>
                         </div>
-                    </div>
-                </div> -->
 
-                <!-- Profile Pictures Section -->
-                <section class="profile-section profile-gallery-section">
-                    <div class="section-title">
-                        <h3><i class="fas fa-images"></i> Profile Pictures</h3>
-                    </div>
-                    <div id="upload-message" class="message-box" style="display:none;"></div>
-                    <div id="profile-gallery" class="profile-gallery"></div>
-                    <div id="gallery-loading" class="loading-spinner" style="display:none;">
-                        <i class="fas fa-spinner fa-spin"></i> Loading images...
-                    </div>
-                </section>
-
-                <!-- Action Buttons -->
-                <div class="profile-actions">
-                    <button class="btn-action primary" onclick="toggleEditMode()">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </button>
-                    <button class="btn-action secondary" onclick="changePassword()">
-                        <i class="fas fa-lock"></i> Change Password
-                    </button>
-                </div>
-            </aside>
-
-            <!-- Right Content Panel -->
-            <div class="profile-right-panel">
-                <!-- Personal Information Section -->
-                <section class="profile-section">
-                    <div class="section-title">
-                        <h3><i class="fas fa-user"></i> Personal Information</h3>
-                        <span class="edit-badge" id="edit-badge" style="display:none;">
-                            <i class="fas fa-pencil-alt"></i> Editing
-                        </span>
-                    </div>
-
-                    <div class="form-rows">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>First Name</label>
-                                <input type="text" id="firstName" placeholder="First name" disabled>
+                        <div class="form-rows">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input type="text" id="firstName" placeholder="First name" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input type="text" id="lastName" placeholder="Last name" disabled>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Last Name</label>
-                                <input type="text" id="lastName" placeholder="Last name" disabled>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="email" placeholder="Email address" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" id="phone" placeholder="Phone number" disabled>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" id="email" placeholder="Email address" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Phone Number</label>
-                                <input type="tel" id="phone" placeholder="Phone number" disabled>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date of Birth</label>
+                                    <input type="date" id="dob" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Gender</label>
+                                    <select id="gender" disabled>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Date of Birth</label>
-                                <input type="date" id="dob" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Gender</label>
-                                <select id="gender" disabled>
-                                    <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <!-- Organization Information Section -->
-                <section class="profile-section">
-                    <div class="section-title">
-                        <h3><i class="fas fa-building"></i> Organization Information</h3>
-                    </div>
+                    <!-- Organization Information Section -->
+                    <section class="profile-section">
+                        <div class="section-title">
+                            <h3><i class="fas fa-building"></i> Organization Information</h3>
+                        </div>
 
-                    <div class="form-rows">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Employee ID</label>
-                                <input type="text" id="employeeId" placeholder="Employee ID" disabled>
+                        <div class="form-rows">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Employee ID</label>
+                                    <input type="text" id="employeeId" placeholder="Employee ID" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <input type="text" id="department" placeholder="Department" disabled>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Department</label>
-                                <input type="text" id="department" placeholder="Department" disabled>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Position</label>
+                                    <input type="text" id="position" placeholder="Job Position" disabled>
+                                </div>
+                            </div>
+                            <div class="form-row full-width">
+                                <div class="form-group">
+                                    <label>Office Address</label>
+                                    <textarea id="address" placeholder="Office address" rows="2" disabled></textarea>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Position</label>
-                                <input type="text" id="position" placeholder="Job Position" disabled>
-                            </div>
-                        </div>
-                        <div class="form-row full-width">
-                            <div class="form-group">
-                                <label>Office Address</label>
-                                <textarea id="address" placeholder="Office address" rows="2" disabled></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <!-- Account Information Section -->
-                <section class="profile-section">
-                    <div class="section-title">
-                        <h3><i class="fas fa-shield-alt"></i> Account Information</h3>
-                    </div>
+                    <!-- Account Information Section -->
+                    <section class="profile-section">
+                        <div class="section-title">
+                            <h3><i class="fas fa-shield-alt"></i> Account Information</h3>
+                        </div>
 
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Account Status</span>
-                            <span class="info-value"><i class="fas fa-check-circle" style="color:#4caf50;"></i> Active</span>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Account Status</span>
+                                <span class="info-value"><i class="fas fa-check-circle" style="color:#4caf50;"></i>
+                                    Active</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Last Login</span>
+                                <span class="info-value" id="last-login">Today, 10:30 AM</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Account Created</span>
+                                <span class="info-value" id="account-created">Jan 15, 2024</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Login Attempts</span>
+                                <span class="info-value">2 today</span>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Last Login</span>
-                            <span class="info-value" id="last-login">Today, 10:30 AM</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Account Created</span>
-                            <span class="info-value" id="account-created">Jan 15, 2024</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Login Attempts</span>
-                            <span class="info-value">2 today</span>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons" id="action-buttons" style="display:none;">
-                    <button class="btn-save" onclick="saveProfile()">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                    <button class="btn-cancel" onclick="cancelEdit()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
+                    <!-- Action Buttons -->
+                    <div class="action-buttons" id="action-buttons" style="display:none;">
+                        <button class="btn-save" onclick="saveProfile()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button class="btn-cancel" onclick="cancelEdit()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
-</div>
+        </main>
+    </div>
 
-<script src="layout-wrapper.js"></script>
-<script src="error-handler.js"></script>
-<script src="header.js"></script>
-<script src="sidebar.js"></script>
-<script src="admin_profile.js"></script>
+    <script src="layout-wrapper.js"></script>
+    <script src="error-handler.js"></script>
+    <script src="header.js"></script>
+    <script src="sidebar.js?v=4"></script>
+    <script src="admin_profile.js?v=10"></script>
 </body>
+
 </html>

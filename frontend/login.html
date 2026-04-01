@@ -14,7 +14,7 @@
 
     <div class="login-container">
         <div class="logo-section">
-            <img src="Untitled design (1).png" alt="Logo" class="logo">
+            <img src="logo.png" alt="Logo" class="logo">
         </div>
 
         <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
@@ -121,6 +121,9 @@
                     localStorage.setItem('userId', result.user_id);
                     localStorage.setItem('username', result.username);
                     localStorage.setItem('userRole', result.role);
+                    if (result.session_id) {
+                        localStorage.setItem('sessionId', result.session_id);
+                    }
                     console.log('[LOGIN] Step 7: User data stored in localStorage');
                     
                     // Step 8-9: Show success popup and redirect

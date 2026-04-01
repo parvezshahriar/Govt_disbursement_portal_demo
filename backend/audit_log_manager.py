@@ -5,7 +5,7 @@ Provides functions to view and analyze audit logs
 """
 
 from database import Session
-from dbmodel import AuditLog, User
+from dbmodel import AuditLog, User, UserInfo
 from sqlalchemy import desc, and_
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -38,11 +38,31 @@ class AuditLogManager:
             
             result = []
             for log in logs:
-                # Get username if user_id exists
+                # Get username and last_name if user_id exists (who performed the action)
                 username = None
+                last_name = None
                 if log.user_id:
                     user = session.query(User).filter(User.id == log.user_id).first()
                     username = user.username if user else None
+                    if user:
+                        user_info = session.query(UserInfo).filter(UserInfo.user_id == log.user_id).first()
+                        last_name = user_info.last_name if user_info else None
+                
+                # Fallback to employee_id if user was deleted
+                display_username = username or log.employee_id or f"User #{log.user_id}" or '-'
+                
+                # Extract deleted user info for DELETE operations on user table
+                deleted_user_info = None
+                if log.table_name == 'user' and log.operation == 'DELETE' and log.old_values:
+                    try:
+                        old_vals = log.old_values if isinstance(log.old_values, dict) else json.loads(log.old_values)
+                        deleted_user_info = {
+                            'deleted_user_id': old_vals.get('id', log.record_id),
+                            'deleted_username': old_vals.get('username', 'Unknown'),
+                            'deleted_email': old_vals.get('email', 'N/A')
+                        }
+                    except:
+                        deleted_user_info = None
                 
                 result.append({
                     'id': log.id,
@@ -54,7 +74,9 @@ class AuditLogManager:
                     'new_values': log.new_values,
                     'changed_columns': log.changed_columns,
                     'user_id': log.user_id or log.employee_id or '-',  # Numeric user ID or employee_id
-                    'username': username or '-'  # Username or dash if not found
+                    'username': display_username,  # Username, employee_id, or user ID as fallback
+                    'last_name': last_name or log.employee_id or '-',  # Last name, employee_id, or dash
+                    'deleted_user_info': deleted_user_info  # Info about deleted user (if applicable)
                 })
             return result
         finally:

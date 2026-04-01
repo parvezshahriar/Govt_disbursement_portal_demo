@@ -212,99 +212,7 @@ body {
     border-color: #ff6f3c;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 260px;
-    height: 100%;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    background: linear-gradient(180deg, #ff8c61 0%, #ff6f3c 100%);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    padding: 70px 20px 20px 0px;
-    margin: 0;
-    align-items: center;
-}
 
-.brand {
-    width: 100%;
-    text-align: center;
-}
-
-.logo-placeholder {
-    font-size: 24px;
-    margin-bottom: 40px;
-    text-align: center;
-}
-
-.sidebar-menu h3 {
-    font-size: 14px;
-    opacity: 0.9;
-    margin-bottom: 15px;
-    font-weight: 500;
-    text-align: center;
-    width: 100%;
-}
-
-.sidebar-menu ul {
-    list-style: none;
-    width: 100%;
-}
-
-.sidebar-item {
-    padding: 12px 15px;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    opacity: 0.8;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    margin: 5px auto;
-    position: relative;
-    overflow: hidden;
-    width: 90%;
-}
-
-.sidebar-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    transition: left 0.3s ease;
-    z-index: -1;
-}
-
-.sidebar-item:hover::before {
-    left: 0;
-}
-
-.sidebar-item.active {
-    opacity: 1;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transform: translateX(5px);
-}
-
-.sidebar-item:hover {
-    opacity: 1;
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.sidebar-footer {
-    margin-top: auto;
-    padding: 10px;
-    opacity: 0.8;
-    cursor: pointer;
-}
 
 /* Header */
 .top-nav {
@@ -314,13 +222,18 @@ body {
     margin-bottom: 20px;
 }
 
-.top-nav h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--text-dark); }
+.top-nav h1 {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    color: var(--text-dark);
+}
 
 .container {
     display: flex;
     width: 100%;
     height: calc(100% - 80px);
     flex: 1;
+    margin-top: 80px;
 }
 
 /* Main Content Area */
@@ -375,19 +288,42 @@ body {
 }
 
 .profile-card {
-    background: white;
-    border: 1px solid var(--border-color);
+    background: linear-gradient(180deg, #ff8c61 0%, #ff6f3c 100%);
+    /* Orange gradient matching sidebar */
+    border: none;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px rgba(255, 111, 60, 0.2);
     text-align: center;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    color: white;
+    /* White text for all children by default */
+    position: relative;
+    /* For edit button positioning */
 }
 
 .profile-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-orange);
+    box-shadow: 0 6px 20px rgba(255, 111, 60, 0.3);
+    transform: translateY(-2px);
+}
+
+.card-edit-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.card-edit-btn:hover {
+    color: white;
 }
 
 .profile-gallery-section {
@@ -411,8 +347,9 @@ body {
     height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid #fff;
-    box-shadow: 0 4px 12px rgba(255, 111, 60, 0.2);
+    border: none;
+    /* Removed white border */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease;
 }
 
@@ -463,8 +400,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 .status-text {
@@ -474,19 +418,28 @@ body {
 }
 
 /* Profile Info */
-.profile-username {
+/* Specific selector to override any global h2 styles */
+.profile-card h2.profile-username,
+.profile-card .profile-username {
     font-size: 18px;
     font-weight: 700;
-    color: var(--text-dark);
-    margin-bottom: 4px;
+    color: #ffffff !important;
+    margin-bottom: 5px;
 }
 
 .profile-role {
     font-size: 12px;
-    color: var(--text-light);
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
     text-transform: capitalize;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
+}
+
+.profile-dob {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 5px;
+    font-weight: 500;
 }
 
 .profile-email {
@@ -498,7 +451,7 @@ body {
 /* Divider */
 .divider {
     height: 1px;
-    background: var(--border-color);
+    background: rgba(255, 255, 255, 0.2);
     margin: 15px 0;
 }
 
@@ -954,6 +907,7 @@ body {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -975,6 +929,7 @@ body {
         transform: translateY(50px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -1037,6 +992,7 @@ body {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
